@@ -29,3 +29,5 @@ coverage/
 # Datos personales exportados desde la app (CONVENTIONS.md §6) — nunca al repo
 *.celimood.json
 celimood-export-*.json
+
+.env

@@ -1,0 +1,12 @@
+packages:
+  - '.'
+
+# Versiones exactas: nada de ^ ni ~ (CONVENTIONS.md §3)
+saveExact: true
+
+# Ninguna versión con menos de 7 días publicada, en MINUTOS (7 × 24 × 60)
+minimumReleaseAge: 10080
+
+# Dependencias autorizadas a ejecutar scripts de build.
+# Se completa con `pnpm approve-builds` a medida que hagan falta.
+onlyBuiltDependencies: []

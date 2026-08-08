@@ -1,0 +1,14 @@
+import { chromium } from 'playwright-core';
+const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+await page.goto('http://localhost:5173', { waitUntil: 'networkidle' });
+await page.getByRole('button', { name: 'Bien' }).click();
+await page.waitForSelector('text=Tags');
+const tag = page.getByRole('button', { name: /Trabajo/ });
+console.log('BEFORE hover bg:', await tag.evaluate(el => getComputedStyle(el).backgroundColor));
+console.log('BEFORE hover transform:', await tag.evaluate(el => getComputedStyle(el).transform));
+await tag.hover();
+await page.waitForTimeout(200);
+console.log('AFTER hover bg:', await tag.evaluate(el => getComputedStyle(el).backgroundColor));
+console.log('AFTER hover transform:', await tag.evaluate(el => getComputedStyle(el).transform));
+await browser.close();

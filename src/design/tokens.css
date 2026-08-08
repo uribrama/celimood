@@ -1,0 +1,117 @@
+/*
+ * Tokens de diseño. La escala de humor y el chequeo de contraste/CVD están
+ * derivados y validados en tools/derive-mood-scale.mjs — no tocar estos hex
+ * sin re-correr ese script (SPEC.md §6.2). Eso incluye --surface-1: los
+ * números de contraste de la escala se midieron contra ESTE valor exacto en
+ * cada modo — cambiarlo invalida esos números. --page-plane, --surface-2 y
+ * las sombras son de diseño libre, nunca entraron en la derivación.
+ *
+ * Los valores oscuros se repiten LITERALMENTE en los dos scopes de abajo: el
+ * media query cubre solo la preferencia del sistema operativo, y el toggle
+ * data-theme tiene que poder ganar en las dos direcciones.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Superficies y tinta */
+  --surface-1: #fcfcfb;
+  --surface-2: #f1efe8;
+  --page-plane-from: #f6f4f0;
+  --page-plane-to: #eae6dd;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --hairline: #e1e0d9;
+  --border: rgba(11, 11, 11, 0.1);
+
+  /* Elevación: page-plane y surface-1 quedaron casi iguales — sin sombra,
+   * las tarjetas se leían planas y sin jerarquía. */
+  --shadow-sm: 0 1px 2px rgba(20, 18, 8, 0.05), 0 1px 1px rgba(20, 18, 8, 0.04);
+  --shadow-md: 0 6px 16px rgba(20, 18, 8, 0.08), 0 2px 4px rgba(20, 18, 8, 0.05);
+  --shadow-lg: 0 12px 32px rgba(20, 18, 8, 0.14), 0 4px 8px rgba(20, 18, 8, 0.06);
+
+  /* Escala de humor (divergente, rojo↔azul, neutro gris medio) */
+  --mood-1: #e34948;
+  --mood-2: #ea8d86;
+  --mood-3: #d3d0c5;
+  --mood-4: #7aa6e0;
+  --mood-5: #2a78d6;
+
+  /* Período (nunca como relleno de celda — ver §6.2) */
+  --period: #e87ba4;
+
+  /* Energía: magnitud ORDINAL (cantidad), no polaridad — un solo hue que se
+   * llena progresivamente, nunca los 5 hues del humor (SPEC.md §9 cerradas). */
+  --energy: #eda100;
+
+  /* Estado (uso reservado, nunca para series) */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --surface-1: #1a1a19;
+    --surface-2: #242422;
+    --page-plane-from: #131312;
+    --page-plane-to: #0a0a0a;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --hairline: #2c2c2a;
+    --border: rgba(255, 255, 255, 0.1);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.4);
+
+    --mood-1: #e66767;
+    --mood-2: #9e5655;
+    --mood-3: #4a4a46;
+    --mood-4: #3f699e;
+    --mood-5: #3987e5;
+
+    --period: #d55181;
+    --energy: #c98500;
+
+    --status-good: #0ca30c;
+    --status-warning: #fab219;
+    --status-serious: #ec835a;
+    --status-critical: #d03b3b;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --surface-1: #1a1a19;
+  --surface-2: #242422;
+  --page-plane-from: #131312;
+  --page-plane-to: #0a0a0a;
+  --text-primary: #ffffff;
+  --text-secondary: #c3c2b7;
+  --text-muted: #898781;
+  --hairline: #2c2c2a;
+  --border: rgba(255, 255, 255, 0.1);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.4);
+
+  --mood-1: #e66767;
+  --mood-2: #9e5655;
+  --mood-3: #4a4a46;
+  --mood-4: #3f699e;
+  --mood-5: #3987e5;
+
+  --period: #d55181;
+  --energy: #c98500;
+
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+}

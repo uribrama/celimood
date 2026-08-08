@@ -1,0 +1,52 @@
+@import 'tailwindcss';
+@import './design/tokens.css';
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background: linear-gradient(180deg, var(--page-plane-from) 0%, var(--page-plane-to) 100%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font-family: inherit;
+}
+
+/*
+ * Tarjeta elevada: reemplaza el patrón "surface-1 + hairline" plano por
+ * sombra real, para que las superficies se lean por encima del fondo en vez
+ * de fundirse con él.
+ */
+.card {
+  background: var(--surface-1);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+}
+
+.card-tappable {
+  cursor: pointer;
+}
+
+.card-tappable:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+  background: var(--surface-2);
+}
+
+.card-tappable:active {
+  box-shadow: var(--shadow-sm);
+  transform: translateY(0) scale(0.99);
+}

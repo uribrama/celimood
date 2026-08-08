@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm test *)",
+      "Bash(node /tmp/claude-1000/-home-uri-Descargas-celimood/e3d63d7d-26e6-463b-baad-6d7cd468abfd/scratchpad/drive.mjs)",
+      "Bash(node /home/uri/Descargas/celimood/.drive-tmp2.mjs)",
+      "Bash(node /home/uri/Descargas/celimood/.drive-tmp3.mjs)",
+      "Bash(lsof -ti:5173 -sTCP:LISTEN)",
+      "Bash(xargs -r kill)",
+      "Bash(pnpm remove *)",
+      "Bash(pnpm build *)",
+      "Bash(convert -background none __TRACKED_VAR__/icon-rounded.svg -resize 192x192 icon-any-192.png)",
+      "Bash(convert -background none __TRACKED_VAR__/icon-rounded.svg -resize 512x512 icon-any-512.png)",
+      "Bash(convert -background '#2a78d6' __TRACKED_VAR__/icon-square.svg -resize 192x192 icon-maskable-192.png)",
+      "Bash(convert -background '#2a78d6' __TRACKED_VAR__/icon-square.svg -resize 512x512 icon-maskable-512.png)",
+      "Bash(convert -background '#2a78d6' __TRACKED_VAR__/icon-square.svg -resize 180x180 apple-touch-icon.png)",
+      "Bash(identify -verbose /home/uri/Descargas/celimood/public/apple-touch-icon.png)",
+      "Bash(convert -background '#2a78d6' __TRACKED_VAR__/icon-square.svg -resize 180x180 -alpha remove -alpha off apple-touch-icon.png)",
+      "Bash(convert -background '#2a78d6' __TRACKED_VAR__/icon-square.svg -resize 192x192 -alpha remove -alpha off icon-maskable-192.png)",
+      "Bash(convert -background '#2a78d6' __TRACKED_VAR__/icon-square.svg -resize 512x512 -alpha remove -alpha off icon-maskable-512.png)",
+      "Bash(identify -verbose apple-touch-icon.png)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm dev *)",
+      "Bash(disown)",
+      "Bash(timeout 30 bash -c 'until curl -sf http://localhost:5173 >/dev/null; do sleep 1; done')",
+      "Bash(node /home/uri/Descargas/celimood/.drive-visual.mjs)"
+    ]
+  }
+}

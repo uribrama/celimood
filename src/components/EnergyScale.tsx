@@ -48,7 +48,7 @@ export function EnergyScale({ value, onChange }: EnergyScaleProps) {
         })}
       </div>
       {value !== undefined && (
-        <p className="text-xs text-center mt-1.5" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-sm text-center mt-1.5" style={{ color: 'var(--text-muted)' }}>
           {ENERGY_LABEL[value]}
         </p>
       )}

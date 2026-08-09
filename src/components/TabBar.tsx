@@ -64,7 +64,7 @@ export function TabBar({ active, onChange }: TabBarProps) {
             >
               {tab.icon}
             </motion.span>
-            <span className="relative text-[11px] font-semibold">{tab.label}</span>
+            <span className="relative text-xs font-semibold">{tab.label}</span>
           </button>
         );
       })}

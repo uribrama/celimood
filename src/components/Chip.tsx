@@ -11,7 +11,7 @@ export function Chip({ label, selected, onClick, count }: ChipProps) {
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap min-h-[36px] border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
+      className={`px-3 py-1.5 rounded-full text-[15px] font-medium whitespace-nowrap min-h-[38px] border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 ${
         selected ? '' : 'bg-[var(--surface-1)] hover:bg-[var(--surface-2)]'
       }`}
       style={

@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './design/nunito-latin.css';
 @import './design/tokens.css';
 
 @media (prefers-reduced-motion: reduce) {
@@ -31,7 +32,7 @@ body {
     linear-gradient(180deg, var(--page-plane-from) 0%, var(--page-plane-to) 100%);
   background-attachment: fixed;
   color: var(--text-primary);
-  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: 'Nunito Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 

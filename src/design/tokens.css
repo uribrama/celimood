@@ -38,6 +38,11 @@
   --mood-4: #7aa6e0;
   --mood-5: #2a78d6;
 
+  /* Identidad de marca — mismo azul que el ícono/theme-color, pero un token
+   * PROPIO (no --mood-5 reusado): si algún día la escala de humor se
+   * re-deriva, la identidad de la app no se mueve con ella. */
+  --brand-accent: #2a78d6;
+
   /* Período (nunca como relleno de celda — ver §6.2) */
   --period: #e87ba4;
 
@@ -74,6 +79,7 @@
     --mood-3: #4a4a46;
     --mood-4: #3f699e;
     --mood-5: #3987e5;
+    --brand-accent: #3987e5;
 
     --period: #d55181;
     --energy: #c98500;
@@ -106,6 +112,7 @@
   --mood-3: #4a4a46;
   --mood-4: #3f699e;
   --mood-5: #3987e5;
+  --brand-accent: #3987e5;
 
   --period: #d55181;
   --energy: #c98500;

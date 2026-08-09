@@ -99,3 +99,17 @@ export function averageMoodByTag(entries: MoodEntry[]): Map<string, number> {
 export function totalDaysLogged(entries: MoodEntry[]): number {
   return entries.length;
 }
+
+/** Igual que moodDistribution pero para energía — un campo opcional, así que
+ * los días sin energía registrada simplemente no entran en la cuenta. */
+export function energyDistribution(entries: MoodEntry[]): Record<MoodLevel, number> {
+  const dist: Record<MoodLevel, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  for (const e of entries) if (e.energy !== undefined) dist[e.energy]++;
+  return dist;
+}
+
+export function averageEnergy(entries: MoodEntry[]): number | null {
+  const withEnergy = entries.filter((e): e is MoodEntry & { energy: MoodLevel } => e.energy !== undefined);
+  if (withEnergy.length === 0) return null;
+  return withEnergy.reduce((sum, e) => sum + e.energy, 0) / withEnergy.length;
+}

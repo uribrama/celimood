@@ -23,7 +23,7 @@ type TabBarProps = {
 export function TabBar({ active, onChange }: TabBarProps) {
   return (
     <nav
-      className="fixed left-1/2 -translate-x-1/2 z-30 flex gap-0.5 p-1.5 rounded-full"
+      className="fixed left-1/2 -translate-x-1/2 z-30 flex gap-1 p-2 rounded-full"
       style={{
         bottom: 'calc(env(safe-area-inset-bottom) + 0.875rem)',
         backgroundColor: 'color-mix(in srgb, var(--surface-1) 88%, transparent)',
@@ -42,26 +42,29 @@ export function TabBar({ active, onChange }: TabBarProps) {
             onClick={() => onChange(tab.id)}
             aria-current={isActive}
             aria-label={tab.label}
-            className="relative flex flex-col items-center justify-center gap-0.5 px-4 py-1.5 min-w-[64px] min-h-[44px] rounded-full transition-colors"
-            style={{ color: isActive ? 'var(--text-primary)' : 'var(--text-muted)' }}
+            className="relative flex flex-col items-center justify-center gap-0.5 px-5 py-2 min-w-[70px] min-h-[52px] rounded-full transition-colors"
+            style={{ color: isActive ? 'var(--brand-accent)' : 'var(--text-muted)' }}
           >
             {isActive && (
               <motion.div
                 layoutId="tab-pill"
                 className="absolute inset-0 rounded-full"
-                style={{ backgroundColor: 'var(--surface-2)', boxShadow: 'var(--shadow-sm)' }}
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--brand-accent) 16%, var(--surface-2))',
+                  boxShadow: 'var(--shadow-sm)',
+                }}
                 transition={{ type: 'spring', stiffness: 500, damping: 35 }}
               />
             )}
             <motion.span
               aria-hidden="true"
-              className="relative text-lg"
-              animate={isActive ? { scale: 1.1, y: -1 } : { scale: 1, y: 0 }}
+              className="relative text-xl"
+              animate={isActive ? { scale: 1.15, y: -1 } : { scale: 1, y: 0 }}
               transition={{ type: 'spring', stiffness: 400, damping: 20 }}
             >
               {tab.icon}
             </motion.span>
-            <span className="relative text-[10px] font-medium">{tab.label}</span>
+            <span className="relative text-[11px] font-semibold">{tab.label}</span>
           </button>
         );
       })}
@@ -71,7 +74,7 @@ export function TabBar({ active, onChange }: TabBarProps) {
 
 export function Screen({ children }: { children: ReactNode }) {
   return (
-    <main className="pb-28 pt-[env(safe-area-inset-top)] min-h-full px-4 max-w-lg mx-auto">
+    <main className="pb-32 pt-[env(safe-area-inset-top)] min-h-screen px-4 max-w-lg mx-auto">
       {children}
     </main>
   );

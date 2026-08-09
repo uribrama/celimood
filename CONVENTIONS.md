@@ -353,6 +353,15 @@ Casos que tienen que estar sí o sí, porque son bugs conocidos y no hipótesis:
 Los componentes de UI se testean donde tienen lógica real (el filtro de "días por
 humor", el cálculo del indicador del mes), no por cobertura.
 
+### `playwright-core` — verificación visual, no parte de la app
+
+Es devDependency **permanente**, a propósito: sirve para levantar la app con
+Chrome headless y mirar capturas reales (layout, hover, ambos temas) antes de dar
+algo por terminado — el mismo espíritu de §11 de este documento. No lo usa ningún
+script de build ni Vitest; no corre en producción. Antes se instalaba y desinstalaba
+en cada verificación, lo que generaba baja constante en `package.json` sin
+necesidad — se decidió dejarlo instalado siempre para cortar ese vaivén.
+
 ---
 
 ## 9. Git

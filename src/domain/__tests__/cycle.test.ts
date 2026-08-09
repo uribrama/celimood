@@ -6,6 +6,7 @@ import {
   estimatePhase,
   medianPlausibleCycleLength,
   predictNextPeriod,
+  symptomFrequency,
   type CycleDay,
   type Flow,
 } from '../cycle';
@@ -182,5 +183,23 @@ describe('estimatePhase', () => {
     expect(estimatePhase('2026-02-08' as DateKey, start, 28)).toBe('follicular');
     expect(estimatePhase('2026-02-15' as DateKey, start, 28)).toBe('ovulatory');
     expect(estimatePhase('2026-02-22' as DateKey, start, 28)).toBe('luteal');
+  });
+});
+
+describe('symptomFrequency', () => {
+  it('cuenta cada síntoma a través de todos los días', () => {
+    const days = [
+      day('2026-08-01', 'medium', ['colicos', 'fatiga']),
+      day('2026-08-02', 'light', ['colicos']),
+      day('2026-08-03', 'none', []),
+    ];
+    const freq = symptomFrequency(days);
+    expect(freq.get('colicos')).toBe(2);
+    expect(freq.get('fatiga')).toBe(1);
+    expect(freq.has('acne')).toBe(false);
+  });
+
+  it('sin días, devuelve un mapa vacío', () => {
+    expect(symptomFrequency([]).size).toBe(0);
   });
 });

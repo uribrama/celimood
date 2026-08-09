@@ -31,3 +31,5 @@ coverage/
 celimood-export-*.json
 
 .env
+# Config local de Claude Code — permisos aprobados en esta máquina, no es del proyecto
+.claude/settings.local.json

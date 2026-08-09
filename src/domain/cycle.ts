@@ -188,3 +188,14 @@ export function estimatePhase(
   if (cycleDay <= ovulationDay + 1) return 'ovulatory';
   return 'luteal';
 }
+
+/** Cuántas veces aparece cada síntoma en el rango de días dado. */
+export function symptomFrequency(days: CycleDay[]): Map<string, number> {
+  const freq = new Map<string, number>();
+  for (const day of days) {
+    for (const symptomId of day.symptoms) {
+      freq.set(symptomId, (freq.get(symptomId) ?? 0) + 1);
+    }
+  }
+  return freq;
+}

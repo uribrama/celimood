@@ -1,15 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import type { DateKey } from '../dates';
 import {
+  averageEnergy,
   averageMoodByTag,
+  energyDistribution,
   entriesByMood,
   moodDistribution,
   summarizeMonth,
   type MoodEntry,
+  type MoodLevel,
 } from '../mood';
 
-function entry(date: string, mood: 1 | 2 | 3 | 4 | 5, tags: string[] = []): MoodEntry {
-  return { date: date as DateKey, mood, tags, createdAt: 0, updatedAt: 0 };
+function entry(
+  date: string,
+  mood: MoodLevel,
+  tags: string[] = [],
+  energy?: MoodLevel,
+): MoodEntry {
+  return { date: date as DateKey, mood, energy, tags, createdAt: 0, updatedAt: 0 };
 }
 
 describe('summarizeMonth', () => {
@@ -75,5 +83,27 @@ describe('averageMoodByTag', () => {
     const byTag = averageMoodByTag(entries);
     expect(byTag.get('sueño')).toBe(3);
     expect(byTag.get('trabajo')).toBe(4.5);
+  });
+});
+
+describe('energyDistribution', () => {
+  it('cuenta solo los días con energía registrada, ignora los que no la tienen', () => {
+    const entries = [
+      entry('2026-08-01', 5, [], 4),
+      entry('2026-08-02', 3, [], 4),
+      entry('2026-08-03', 2), // sin energía
+    ];
+    expect(energyDistribution(entries)).toEqual({ 1: 0, 2: 0, 3: 0, 4: 2, 5: 0 });
+  });
+});
+
+describe('averageEnergy', () => {
+  it('promedia solo los días con energía registrada', () => {
+    const entries = [entry('2026-08-01', 5, [], 4), entry('2026-08-02', 3, [], 2), entry('2026-08-03', 2)];
+    expect(averageEnergy(entries)).toBe(3);
+  });
+
+  it('sin ningún día con energía, devuelve null', () => {
+    expect(averageEnergy([entry('2026-08-01', 5)])).toBeNull();
   });
 });

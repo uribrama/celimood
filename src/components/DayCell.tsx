@@ -14,6 +14,9 @@ export type DayCellProps = {
   periodLogged?: boolean;
   periodPredicted?: boolean;
   isToday?: boolean;
+  /** Día futuro: todavía no se puede registrar. Sigue siendo tocable — el
+   * tap explica por qué, en vez de un botón mudo que no responde. */
+  isFuture?: boolean;
   onClick?: () => void;
 };
 
@@ -29,6 +32,7 @@ export function DayCell({
   periodLogged,
   periodPredicted,
   isToday,
+  isFuture,
   onClick,
 }: DayCellProps) {
   const hasChip = mood !== undefined;
@@ -41,6 +45,7 @@ export function DayCell({
         hasChip ? 'hover:brightness-110' : 'hover:bg-[var(--surface-2)]'
       }`}
       style={{
+        opacity: isFuture ? 0.4 : 1,
         // Sin chip, el fondo queda SIN declarar (no 'transparent' fijo): así
         // la clase hover de arriba puede pintarlo — un inline value siempre
         // le gana a :hover en CSS, y el hover es la única señal de "esto se

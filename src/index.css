@@ -9,9 +9,13 @@
   }
 }
 
-html, body, #root {
-  height: 100%;
-}
+/*
+ * Sin `height: 100%` encadenado por html→body→#root→main: esa cadena de
+ * porcentajes acumula redondeo de subpíxeles entre navegadores y termina
+ * generando un scroll fantasma de unos pocos px (nada que ver, pero
+ * técnicamente scrolleable). `min-height: 100vh` en Screen (TabBar.tsx) mide
+ * directo contra el viewport, sin pasar por esa cadena.
+ */
 
 body {
   background: linear-gradient(180deg, var(--page-plane-from) 0%, var(--page-plane-to) 100%);

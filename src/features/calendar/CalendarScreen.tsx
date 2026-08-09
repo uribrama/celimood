@@ -4,8 +4,12 @@ import { StatTile } from '../../components/StatTile';
 import { DayCell } from '../../components/DayCell';
 import { BottomSheet } from '../../components/BottomSheet';
 import { MoodScale } from '../../components/MoodScale';
+import { InlineConfirmation } from '../../components/InlineConfirmation';
+import { DayDetailsEditor } from '../../components/DayDetailsEditor';
+import { useTimedFlag } from '../../hooks/useTimedFlag';
 import {
   addDays,
+  compareDateKeys,
   daysInMonth,
   monthLabel as formatMonthLabel,
   nextMonthKey,
@@ -25,6 +29,7 @@ const WEEKDAY_LABELS = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 export function CalendarScreen() {
   const [monthKey, setMonthKey] = useState<DateKey>(todayKey());
   const [openDay, setOpenDay] = useState<DateKey | null>(null);
+  const [daySaved, triggerDaySaved] = useTimedFlag(1500);
 
   const entries = useLiveQuery(getAllMoodEntries, []) ?? [];
   const cycleDays = useLiveQuery(getAllCycleDays, []) ?? [];
@@ -71,10 +76,12 @@ export function CalendarScreen() {
   const leadingBlanks = weekdayIndex(days[0], 1);
   const today = todayKey();
   const openEntry = openDay ? entryByDate.get(openDay) : undefined;
+  const openDayIsFuture = openDay !== null && compareDateKeys(openDay, today) > 0;
 
   async function selectMood(mood: MoodLevel) {
-    if (!openDay) return;
+    if (!openDay || openDayIsFuture) return;
     await upsertMoodEntry({ date: openDay, mood, tags: openEntry?.tags, note: openEntry?.note });
+    triggerDaySaved();
   }
 
   return (
@@ -127,6 +134,7 @@ export function CalendarScreen() {
               periodLogged={loggedPeriodDates.has(date)}
               periodPredicted={predictedDates.has(date) && !loggedPeriodDates.has(date)}
               isToday={date === today}
+              isFuture={compareDateKeys(date, today) > 0}
               onClick={() => setOpenDay(date)}
             />
           );
@@ -138,11 +146,20 @@ export function CalendarScreen() {
         onClose={() => setOpenDay(null)}
         title={openDay ?? undefined}
       >
-        <MoodScale value={openEntry?.mood} onChange={selectMood} />
-        {openEntry?.note && (
-          <p className="text-sm mt-4" style={{ color: 'var(--text-secondary)' }}>
-            {openEntry.note}
+        {openDayIsFuture ? (
+          <p className="text-sm text-center py-6" style={{ color: 'var(--text-secondary)' }}>
+            Todavía no llegaste a este día — no se puede registrar por adelantado.
           </p>
+        ) : (
+          <>
+            <MoodScale value={openEntry?.mood} onChange={selectMood} />
+            <InlineConfirmation show={daySaved} message="Actualizado" />
+            {openDay && openEntry && (
+              <div className="mt-6">
+                <DayDetailsEditor date={openDay} entry={openEntry} />
+              </div>
+            )}
+          </>
         )}
       </BottomSheet>
     </Screen>

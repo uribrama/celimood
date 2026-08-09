@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Screen } from '../../components/TabBar';
 import { db } from '../../db/schema';
 import { useLiveQuery } from '../../db/useLiveQuery';
@@ -11,6 +11,7 @@ import {
   type ImportSummary,
 } from '../../db/backupRepo';
 import { BottomSheet } from '../../components/BottomSheet';
+import { InlineConfirmation } from '../../components/InlineConfirmation';
 
 const THEME_OPTIONS = [
   { value: 'system', label: 'Automático' },
@@ -30,6 +31,20 @@ export function SettingsScreen() {
   const [importError, setImportError] = useState<string | null>(null);
   const [confirmErase, setConfirmErase] = useState(false);
   const [eraseText, setEraseText] = useState('');
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const actionMessageTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Import y borrado cierran su hoja al instante (SPEC.md §5.6) — sin esto,
+  // esa desaparición inmediata no dice si la acción realmente pasó algo.
+  function showActionMessage(message: string) {
+    if (actionMessageTimeout.current) clearTimeout(actionMessageTimeout.current);
+    setActionMessage(message);
+    actionMessageTimeout.current = setTimeout(() => setActionMessage(null), 2500);
+  }
+
+  useEffect(() => () => {
+    if (actionMessageTimeout.current) clearTimeout(actionMessageTimeout.current);
+  }, []);
 
   async function setTheme(theme: 'system' | 'light' | 'dark') {
     await db.settings.update('singleton', { theme });
@@ -67,8 +82,12 @@ export function SettingsScreen() {
 
   async function confirmApply(mode: 'merge' | 'replace') {
     if (!pendingImport) return;
+    const { newDays, conflicts } = pendingImport.summary;
     await applyImport(pendingImport.backup, mode);
     setPendingImport(null);
+    showActionMessage(
+      mode === 'replace' ? 'Datos reemplazados' : `Importado: ${newDays + conflicts} días`,
+    );
   }
 
   const daysSinceExport = settings?.lastExportAt
@@ -79,6 +98,9 @@ export function SettingsScreen() {
     <Screen>
       <header className="pt-6 pb-4">
         <h1 className="text-2xl font-semibold">Ajustes</h1>
+        {/* Import y borrado cierran su hoja al instante — esto es lo único
+            que dice si la acción realmente pasó algo. */}
+        <InlineConfirmation show={actionMessage !== null} message={actionMessage ?? ''} />
       </header>
 
       <section className="mb-6">
@@ -126,7 +148,7 @@ export function SettingsScreen() {
           style={{ backgroundColor: settings?.cycleTrackingEnabled ? 'var(--mood-5)' : 'var(--hairline)' }}
         >
           <span
-            className="absolute top-0.5 w-6 h-6 rounded-full transition-transform"
+            className="absolute left-0 top-0.5 w-6 h-6 rounded-full transition-transform"
             style={{
               backgroundColor: 'var(--surface-1)',
               transform: settings?.cycleTrackingEnabled ? 'translateX(22px)' : 'translateX(2px)',
@@ -245,6 +267,7 @@ export function SettingsScreen() {
               await eraseAllData();
               setConfirmErase(false);
               setEraseText('');
+              showActionMessage('Datos borrados');
             }}
             className="w-full py-2.5 rounded-lg text-sm font-medium disabled:opacity-40 transition-all duration-150 enabled:hover:-translate-y-0.5 enabled:hover:brightness-110 enabled:active:translate-y-0 enabled:active:scale-95"
             style={{ backgroundColor: 'var(--status-critical)', color: 'white', boxShadow: 'var(--shadow-sm)' }}

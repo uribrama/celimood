@@ -11,13 +11,15 @@ const MOOD_VAR: Record<MoodLevel, string> = {
 };
 
 const WIDTH = 600;
-const HEIGHT = 160;
 const PAD = { top: 10, right: 10, bottom: 20, left: 26 };
 
 type TrendChartProps = {
   entries: MoodEntry[];
   rangeStart: DateKey;
   rangeEnd: DateKey;
+  /** Alto lógico del SVG — más grande en Hoy que en la lista compacta de
+   * Insights. El ancho sigue siendo 100% del contenedor (responsive). */
+  height?: number;
 };
 
 /**
@@ -29,9 +31,10 @@ type TrendChartProps = {
  * separados por días sin registrar dibujaría una tendencia que no existe
  * (mismo principio que "ausente ≠ dato" en SPEC.md §4/§5.2).
  */
-export function TrendChart({ entries, rangeStart, rangeEnd }: TrendChartProps) {
+export function TrendChart({ entries, rangeStart, rangeEnd, height = 160 }: TrendChartProps) {
   const [showTable, setShowTable] = useState(false);
   const gradientId = useId();
+  const HEIGHT = height;
 
   const sorted = [...entries].sort((a, b) => (a.date < b.date ? -1 : 1));
   const totalDays = Math.max(1, diffDays(rangeStart, rangeEnd));

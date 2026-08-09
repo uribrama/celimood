@@ -1,18 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MoodScale } from '../../components/MoodScale';
 import { DayDetailsEditor } from '../../components/DayDetailsEditor';
+import { TrendChart } from '../../components/TrendChart';
+import { BottomSheet } from '../../components/BottomSheet';
 import { Screen } from '../../components/TabBar';
-import { todayKey } from '../../domain/dates';
+import { addDays, todayKey } from '../../domain/dates';
 import type { MoodLevel } from '../../domain/mood';
-import { getMoodEntry, upsertMoodEntry } from '../../db/moodRepo';
+import { getMoodEntry, getAllMoodEntries, upsertMoodEntry } from '../../db/moodRepo';
 import { useLiveQuery } from '../../db/useLiveQuery';
 import { useTimedFlag } from '../../hooks/useTimedFlag';
+
+const TREND_RANGE_DAYS = 30;
 
 export function TodayScreen() {
   const today = todayKey();
   const entry = useLiveQuery(() => getMoodEntry(today), [today]);
+  const allEntries = useLiveQuery(getAllMoodEntries, []) ?? [];
   const [justSaved, triggerJustSaved] = useTimedFlag(1800);
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
 
   // Feedback optimista: la cara se marca seleccionada al toque, sin esperar
   // la vuelta de IndexedDB + liveQuery. Sin esto, en un dispositivo real el
@@ -24,8 +30,40 @@ export function TodayScreen() {
 
   const displayedMood = optimisticMood ?? entry?.mood;
 
+  // ¿Hoy ya estaba registrado cuando ENTRASTE a esta pantalla, o lo acabás de
+  // loguear en esta misma visita? La diferencia decide si se muestra el
+  // editor expandido (invita a completar tags/energía/nota mientras está
+  // fresco) o el resumen con la tendencia (ya volviste a mirar, no a cargar).
+  // Como la pantalla se desmonta al cambiar de tab, cambiar de tab y volver
+  // — o cerrar y reabrir la app — cuentan como "entrar de nuevo" gratis, sin
+  // lógica extra para cada caso.
+  const [hadEntryOnMount, setHadEntryOnMount] = useState<boolean | null>(null);
+  const [justLoggedThisVisit, setJustLoggedThisVisit] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    getMoodEntry(today).then((result) => {
+      if (!cancelled) setHadEntryOnMount(result !== undefined);
+    });
+    return () => {
+      cancelled = true;
+    };
+    // Solo al montar — es una lectura única para fijar el punto de partida,
+    // no debe repetirse cuando `entry` cambia por culpa de nuestros propios guardados.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const showExpandedEditor = hadEntryOnMount === false || justLoggedThisVisit;
+  const showSummary = entry !== undefined && !showExpandedEditor;
+
+  const trendRangeStart = addDays(today, -TREND_RANGE_DAYS);
+  const trendEntries = useMemo(
+    () => allEntries.filter((e) => e.date >= trendRangeStart),
+    [allEntries, trendRangeStart],
+  );
+
   async function handleMoodSelect(mood: MoodLevel) {
     setOptimisticMood(mood);
+    setJustLoggedThisVisit(true);
     if ('vibrate' in navigator) navigator.vibrate(15);
     triggerJustSaved();
     await upsertMoodEntry({ date: today, mood, tags: entry?.tags, note: entry?.note });
@@ -71,13 +109,48 @@ export function TodayScreen() {
         </AnimatePresence>
       </div>
 
-      <AnimatePresence>
-        {entry && (
-          <div className="mt-6">
+      <AnimatePresence mode="wait">
+        {showExpandedEditor && entry && (
+          <motion.div
+            key="editor"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-6 overflow-hidden"
+          >
             <DayDetailsEditor date={today} entry={entry} />
-          </div>
+          </motion.div>
+        )}
+
+        {showSummary && (
+          <motion.div
+            key="summary"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="mt-6"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                Tendencia · últimos {TREND_RANGE_DAYS} días
+              </h2>
+              <button
+                type="button"
+                onClick={() => setEditSheetOpen(true)}
+                className="text-xs font-medium underline"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                ✎ Editar detalles de hoy
+              </button>
+            </div>
+            <TrendChart entries={trendEntries} rangeStart={trendRangeStart} rangeEnd={today} height={220} />
+          </motion.div>
         )}
       </AnimatePresence>
+
+      <BottomSheet open={editSheetOpen} onClose={() => setEditSheetOpen(false)} title="Hoy">
+        {entry && <DayDetailsEditor date={today} entry={entry} />}
+      </BottomSheet>
     </Screen>
   );
 }

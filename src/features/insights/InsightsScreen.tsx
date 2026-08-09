@@ -21,7 +21,6 @@ import {
   medianPlausibleCycleLength,
   symptomFrequency,
 } from '../../domain/cycle';
-import { TrendChart } from '../../components/TrendChart';
 import { useLiveQuery } from '../../db/useLiveQuery';
 import { getAllMoodEntries } from '../../db/moodRepo';
 import { getAllCycleDays } from '../../db/cycleRepo';
@@ -86,11 +85,6 @@ export function InsightsScreen({ onOpenBrowse, onOpenCycle, cycleTrackingEnabled
     return allCycleDays.filter((d) => d.date >= cutoff);
   }, [allCycleDays, cutoff]);
 
-  const today = todayKey();
-  // Con "Todo" seleccionado no hay un cutoff fijo — el eje del gráfico arranca
-  // en el primer día que exista, no en una fecha arbitraria.
-  const trendRangeStart =
-    cutoff ?? (allEntries.length > 0 ? [...allEntries].sort((a, b) => (a.date < b.date ? -1 : 1))[0].date : today);
 
   const distribution = useMemo(() => moodDistribution(entries), [entries]);
   const byTag = useMemo(() => averageMoodByTag(entries), [entries]);
@@ -159,13 +153,6 @@ export function InsightsScreen({ onOpenBrowse, onOpenCycle, cycleTrackingEnabled
           />
         ))}
       </div>
-
-      <section className="mb-8">
-        <h2 className="text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-          Tendencia · {rangeLabel}
-        </h2>
-        <TrendChart entries={entries} rangeStart={trendRangeStart} rangeEnd={today} />
-      </section>
 
       <section className="mb-8">
         <h2 className="text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>

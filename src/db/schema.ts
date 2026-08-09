@@ -47,6 +47,13 @@ export const DEFAULT_SYMPTOMS: Omit<Symptom, 'archived'>[] = [
   { id: 'antojos', label: 'Antojos' },
   { id: 'sensibilidad', label: 'Sensibilidad' },
   { id: 'fatiga', label: 'Fatiga' },
+  // Emocionales — no son redundantes con el nivel de humor: "Mal" por
+  // tristeza y "Mal" por irritabilidad son cosas distintas que el humor
+  // solo no distingue, y es justo lo que "Humor por fase del ciclo" en
+  // Insights está pensado para revelar.
+  { id: 'irritabilidad', label: 'Irritabilidad' },
+  { id: 'ansiedad', label: 'Ansiedad' },
+  { id: 'cambios-de-animo', label: 'Cambios de ánimo' },
 ];
 
 class CelimoodDB extends Dexie {
@@ -96,6 +103,7 @@ export async function ensureSeedData(): Promise<void> {
   }
 
   await retireOldTags();
+  await addMissingDefaultSymptoms();
 }
 
 /**
@@ -111,4 +119,18 @@ async function retireOldTags(): Promise<void> {
     .toArray();
   if (toRetire.length === 0) return;
   await db.tags.bulkPut(toRetire.map((t) => ({ ...t, archived: true })));
+}
+
+/**
+ * Migración liviana inversa a `retireOldTags`: si DEFAULT_SYMPTOMS creció
+ * en una versión nueva (p. ej. los emocionales), agrega los que falten en
+ * una base que ya sembró la lista vieja — el seed inicial de arriba solo
+ * corre una vez (`symptomCount === 0`), así que sin esto una base existente
+ * nunca vería los síntomas nuevos.
+ */
+async function addMissingDefaultSymptoms(): Promise<void> {
+  const existingIds = new Set((await db.symptoms.toArray()).map((s) => s.id));
+  const missing = DEFAULT_SYMPTOMS.filter((s) => !existingIds.has(s.id));
+  if (missing.length === 0) return;
+  await db.symptoms.bulkPut(missing.map((s) => ({ ...s, archived: false })));
 }

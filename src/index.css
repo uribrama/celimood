@@ -17,8 +17,18 @@
  * directo contra el viewport, sin pasar por esa cadena.
  */
 
+/*
+ * Dos manchas de color muy suaves (marca arriba, período abajo) sobre el
+ * degradé neutro de base — sin esto, el fondo se leía todo blanco/negro y
+ * la app perdía la personalidad que sí tienen las caras y los chips.
+ * `color-mix` a baja proporción: da color sin comprometer el contraste del
+ * texto, que sigue leyendo casi contra el neutro puro.
+ */
 body {
-  background: linear-gradient(180deg, var(--page-plane-from) 0%, var(--page-plane-to) 100%);
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -5%, color-mix(in srgb, var(--brand-accent) 16%, transparent), transparent 60%),
+    radial-gradient(ellipse 800px 500px at 100% 30%, color-mix(in srgb, var(--period) 12%, transparent), transparent 60%),
+    linear-gradient(180deg, var(--page-plane-from) 0%, var(--page-plane-to) 100%);
   background-attachment: fixed;
   color: var(--text-primary);
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;

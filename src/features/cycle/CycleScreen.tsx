@@ -58,7 +58,9 @@ export function CycleScreen({ onBack }: { onBack: () => void }) {
             <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--hairline)' }}>
               {prediction.kind === 'none' && (
                 <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                  Necesito un ciclo más para estimar tu próximo período.
+                  {periods.length < 2
+                    ? 'Necesito al menos otro período registrado para poder estimar un ciclo.'
+                    : `Con ${periods.length} períodos tengo ${cycles.filter((c) => c.isPlausible).length} ${cycles.filter((c) => c.isPlausible).length === 1 ? 'ciclo medido' : 'ciclos medidos'} — necesito 2 para estimar el próximo.`}
                 </p>
               )}
               {prediction.kind === 'point' && (
@@ -75,9 +77,28 @@ export function CycleScreen({ onBack }: { onBack: () => void }) {
             </div>
           </div>
 
+          <section className="mb-6">
+            <h2 className="text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
+              Períodos registrados
+            </h2>
+            <ul className="space-y-1.5">
+              {[...periods].reverse().map((p) => (
+                <li key={p.start} className="card flex items-center justify-between text-sm p-2.5 rounded-lg">
+                  <span>
+                    {p.start}
+                    {p.end !== p.start && ` → ${p.end}`}
+                  </span>
+                  <span className="tabular-nums" style={{ color: 'var(--text-muted)' }}>
+                    {diffDays(p.start, p.end) + 1} {diffDays(p.start, p.end) + 1 === 1 ? 'día' : 'días'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+
           <section>
             <h2 className="text-sm font-medium mb-3" style={{ color: 'var(--text-secondary)' }}>
-              Histórico de ciclos
+              Duración entre períodos
             </h2>
             <ul className="space-y-1.5">
               {[...cycles].reverse().map((c) => (

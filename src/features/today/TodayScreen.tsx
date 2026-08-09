@@ -43,7 +43,7 @@ export function TodayScreen() {
         className="rounded-3xl pt-5 pb-4 px-4 -mx-4"
         style={{
           background:
-            'linear-gradient(160deg, color-mix(in srgb, var(--brand-accent) 13%, var(--surface-1)) 0%, var(--surface-1) 65%)',
+            'linear-gradient(135deg, color-mix(in srgb, var(--brand-accent) 20%, var(--surface-1)) 0%, var(--surface-1) 45%, var(--surface-1) 60%, color-mix(in srgb, var(--period) 14%, var(--surface-1)) 100%)',
           boxShadow: 'var(--shadow-sm)',
         }}
       >

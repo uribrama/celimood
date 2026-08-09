@@ -21,9 +21,11 @@ type DayDetailsEditorProps = {
   /** Se llama en cada guardado — Hoy lo usa para resetear el timer de
    * inactividad que colapsa el editor a la tendencia (ver TodayScreen). */
   onActivity?: () => void;
-  /** true mientras algo adentro (típicamente la nota) tiene el foco — Hoy
-   * pausa el timer de inactividad con esto, para no tapar el editor con la
-   * tendencia mientras estás escribiendo, aunque lleve más de 20s. */
+  /** true mientras la nota tiene el foco — Hoy pausa el timer de inactividad
+   * con esto, para no tapar el editor con la tendencia a media frase. No se
+   * usa foco genérico de todo el editor: un botón (Energía, un tag) también
+   * recibe foco al tocarlo y se queda así hasta el próximo tap, lo que
+   * pausaría el timer para siempre sin que el usuario esté "haciendo" nada. */
   onFocusWithinChange?: (hasFocus: boolean) => void;
 };
 
@@ -100,8 +102,6 @@ export function DayDetailsEditor({ date, entry, onActivity, onFocusWithinChange 
       animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }}
       className="space-y-4 overflow-hidden"
-      onFocus={() => onFocusWithinChange?.(true)}
-      onBlur={() => onFocusWithinChange?.(false)}
     >
       <section>
         <h2 className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
@@ -155,7 +155,11 @@ export function DayDetailsEditor({ date, entry, onActivity, onFocusWithinChange 
         <textarea
           key={date}
           defaultValue={entry.note}
-          onBlur={(e) => saveNote(e.target.value)}
+          onFocus={() => onFocusWithinChange?.(true)}
+          onBlur={(e) => {
+            onFocusWithinChange?.(false);
+            saveNote(e.target.value);
+          }}
           placeholder="¿Algo que quieras recordar de este día?"
           rows={3}
           className="card w-full rounded-xl p-3 text-sm resize-none transition-shadow focus-visible:outline-2 focus-visible:shadow-[var(--shadow-md)]"

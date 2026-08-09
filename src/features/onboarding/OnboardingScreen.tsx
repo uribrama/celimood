@@ -21,7 +21,7 @@ const STEPS = [
 export function OnboardingScreen({ onDone }: { onDone: () => void }) {
   return (
     <main
-      className="min-h-screen flex flex-col px-6 pb-8"
+      className="min-h-screen flex flex-col px-6 pb-8 max-w-lg mx-auto"
       style={{ paddingTop: 'calc(env(safe-area-inset-top) + 2.5rem)' }}
     >
       <motion.div

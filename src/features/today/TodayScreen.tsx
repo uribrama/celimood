@@ -133,7 +133,7 @@ export function TodayScreen() {
             <h2 className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
               Tendencia · últimos {TREND_RANGE_DAYS} días
             </h2>
-            <TrendChart entries={trendEntries} rangeStart={trendRangeStart} rangeEnd={today} height={220} />
+            <TrendChart entries={trendEntries} rangeStart={trendRangeStart} rangeEnd={today} height={260} />
             <button
               type="button"
               onClick={() => setEditSheetOpen(true)}

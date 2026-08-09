@@ -10,8 +10,15 @@ const MOOD_VAR: Record<MoodLevel, string> = {
   5: 'var(--mood-5)',
 };
 
-const WIDTH = 600;
-const PAD = { top: 10, right: 10, bottom: 20, left: 26 };
+// Ancho lógico cercano al ancho REAL en pantalla (~360px en un celular, con
+// el padding de Screen) — no un número redondo grande arbitrario. El SVG
+// escala todo su contenido (texto, puntos) proporcional a esta relación
+// viewBox/ancho-real; con un viewBox mucho más ancho que la pantalla, cada
+// unidad interna (fontSize, radio) termina rindiendo bastante más chica de
+// lo que el número sugiere — eso hacía que texto y puntos se vieran
+// miniatura aunque el gráfico entero ocupara el ancho completo.
+const WIDTH = 340;
+const PAD = { top: 12, right: 8, bottom: 22, left: 30 };
 
 type TrendChartProps = {
   entries: MoodEntry[];
@@ -128,11 +135,11 @@ export function TrendChart({ entries, rangeStart, rangeEnd, height = 160 }: Tren
                 strokeWidth={1}
               />
               <text
-                x={PAD.left - 6}
+                x={PAD.left - 8}
                 y={yFor(level)}
                 textAnchor="end"
                 dominantBaseline="middle"
-                fontSize="11"
+                fontSize="15"
               >
                 {MOOD_EMOJI[level]}
               </text>
@@ -169,7 +176,7 @@ export function TrendChart({ entries, rangeStart, rangeEnd, height = 160 }: Tren
               sin agrandar la marca visual (marks-and-anatomy.md). */}
           {sorted.map((e) => (
             <g key={e.date}>
-              <circle cx={xFor(e.date)} cy={yFor(e.mood)} r={9} fill="transparent">
+              <circle cx={xFor(e.date)} cy={yFor(e.mood)} r={11} fill="transparent">
                 <title>
                   {e.date} · {MOOD_LABEL[e.mood]}
                 </title>
@@ -177,18 +184,18 @@ export function TrendChart({ entries, rangeStart, rangeEnd, height = 160 }: Tren
               <circle
                 cx={xFor(e.date)}
                 cy={yFor(e.mood)}
-                r={3.5}
+                r={5}
                 fill={MOOD_VAR[e.mood]}
                 stroke="var(--surface-1)"
-                strokeWidth={1.5}
+                strokeWidth={2}
               />
             </g>
           ))}
 
-          <text x={PAD.left} y={HEIGHT - 4} fontSize="10" fill="var(--text-muted)">
+          <text x={PAD.left} y={HEIGHT - 5} fontSize="12" fill="var(--text-muted)">
             {rangeStart}
           </text>
-          <text x={WIDTH - PAD.right} y={HEIGHT - 4} fontSize="10" fill="var(--text-muted)" textAnchor="end">
+          <text x={WIDTH - PAD.right} y={HEIGHT - 5} fontSize="12" fill="var(--text-muted)" textAnchor="end">
             {rangeEnd}
           </text>
         </svg>

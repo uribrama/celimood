@@ -74,7 +74,7 @@ export function TabBar({ active, onChange }: TabBarProps) {
 
 export function Screen({ children }: { children: ReactNode }) {
   return (
-    <main className="pb-32 pt-[env(safe-area-inset-top)] min-h-screen px-4 max-w-lg mx-auto">
+    <main className="pb-32 pt-[calc(env(safe-area-inset-top)+0.75rem)] min-h-screen px-4 max-w-lg mx-auto">
       {children}
     </main>
   );

@@ -183,7 +183,8 @@ export function InsightsScreen({ onOpenBrowse, onOpenCycle, cycleTrackingEnabled
             })}
           </div>
           <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
-            Desvío respecto del promedio de estos {rangeLabel.toLowerCase()} ({overallAverage?.toFixed(1) ?? '—'}).
+            Cuánto mejor o peor es tu humor en los días con cada tag, comparado con tu
+            promedio general de estos {rangeLabel.toLowerCase()} ({overallAverage?.toFixed(1) ?? '—'}).
           </p>
         </section>
       )}

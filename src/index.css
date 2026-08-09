@@ -26,8 +26,8 @@
  */
 body {
   background:
-    radial-gradient(ellipse 900px 500px at 15% -5%, color-mix(in srgb, var(--brand-accent) 16%, transparent), transparent 60%),
-    radial-gradient(ellipse 800px 500px at 100% 30%, color-mix(in srgb, var(--period) 12%, transparent), transparent 60%),
+    radial-gradient(ellipse 1000px 600px at 10% -10%, color-mix(in srgb, var(--brand-accent) 32%, transparent), transparent 55%),
+    radial-gradient(ellipse 900px 600px at 100% 40%, color-mix(in srgb, var(--period) 26%, transparent), transparent 55%),
     linear-gradient(180deg, var(--page-plane-from) 0%, var(--page-plane-to) 100%);
   background-attachment: fixed;
   color: var(--text-primary);

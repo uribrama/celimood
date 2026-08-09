@@ -47,10 +47,17 @@ export function StatTile({
       style={{ opacity: isReliable ? 1 : 0.6 }}
     >
       <span className="text-5xl" aria-hidden="true">{MOOD_EMOJI[roundedMood]}</span>
-      <div className="flex items-baseline gap-2">
+      {/* El número queda centrado por sí solo — el delta cuelga afuera con
+          posición absoluta, así no corre el centrado cuando aparece. Antes
+          compartían una fila `flex` y el conjunto se centraba como bloque,
+          dejando el número descentrado respecto de la cara de arriba. */}
+      <div className="relative flex justify-center">
         <span className="text-2xl font-semibold tabular-nums">{average.toFixed(1)}</span>
         {deltaText && (
-          <span className="text-sm font-medium" style={{ color: deltaText.color }}>
+          <span
+            className="absolute left-full top-1/2 -translate-y-1/2 ml-2 text-sm font-medium whitespace-nowrap"
+            style={{ color: deltaText.color }}
+          >
             {deltaText.icon} {Math.abs(delta!).toFixed(1)}
           </span>
         )}

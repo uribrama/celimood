@@ -23,7 +23,11 @@
       "Bash(pnpm dev *)",
       "Bash(disown)",
       "Bash(timeout 30 bash -c 'until curl -sf http://localhost:5173 >/dev/null; do sleep 1; done')",
-      "Bash(node /home/uri/Descargas/celimood/.drive-visual.mjs)"
+      "Bash(node /home/uri/Descargas/celimood/.drive-visual.mjs)",
+      "Bash(rm -f /home/uri/Descargas/celimood/.diag.mjs /home/uri/Descargas/celimood/.diag2.mjs *)"
+    ],
+    "additionalDirectories": [
+      "/tmp"
     ]
   }
 }

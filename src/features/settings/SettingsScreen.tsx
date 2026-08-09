@@ -114,7 +114,7 @@ export function SettingsScreen() {
         <div>
           <h2 className="text-sm font-medium">Tracking de ciclo</h2>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-            Habilita el registro de flujo, síntomas y predicciones.
+            Habilita el registro de período, síntomas y predicciones.
           </p>
         </div>
         <button

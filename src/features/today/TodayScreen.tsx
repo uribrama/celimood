@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MoodScale } from '../../components/MoodScale';
 import { EnergyScale } from '../../components/EnergyScale';
@@ -7,27 +7,45 @@ import { Screen } from '../../components/TabBar';
 import { todayKey } from '../../domain/dates';
 import type { MoodLevel } from '../../domain/mood';
 import { getMoodEntry, upsertMoodEntry } from '../../db/moodRepo';
-import { getCycleDay } from '../../db/cycleRepo';
+import { getCycleDay, upsertCycleDay } from '../../db/cycleRepo';
 import { useLiveQuery } from '../../db/useLiveQuery';
 import { db } from '../../db/schema';
-import { CycleLogSheet } from '../cycle/CycleLogSheet';
+
+/** Valor de "flujo" que representa período on/off en la UI simplificada (ver
+ * abajo). El dominio sigue modelando 5 niveles de flujo — eso no cambió — la
+ * UI ahora solo expone un interruptor, así que cuando está "prendido" guarda
+ * este valor. */
+const PERIOD_ON_FLOW = 'medium';
 
 export function TodayScreen() {
   const today = todayKey();
   const entry = useLiveQuery(() => getMoodEntry(today), [today]);
   const tags = useLiveQuery(() => db.tags.filter((t) => !t.archived).toArray(), []);
+  const symptoms = useLiveQuery(() => db.symptoms.filter((s) => !s.archived).toArray(), []);
   const settings = useLiveQuery(() => db.settings.get('singleton'), []);
   const cycleDay = useLiveQuery(() => getCycleDay(today), [today]);
   const [justSaved, setJustSaved] = useState(false);
-  const [cycleSheetOpen, setCycleSheetOpen] = useState(false);
 
+  // Feedback optimista: la cara se marca seleccionada al toque, sin esperar
+  // la vuelta de IndexedDB + liveQuery. Sin esto, en un dispositivo real el
+  // round-trip puede sentirse como "tuve que tocar 2 veces para que guarde".
+  const [optimisticMood, setOptimisticMood] = useState<MoodLevel | null>(null);
+  useEffect(() => {
+    if (optimisticMood !== null && entry?.mood === optimisticMood) setOptimisticMood(null);
+  }, [entry?.mood, optimisticMood]);
+
+  const displayedMood = optimisticMood ?? entry?.mood;
+  const showDetails = entry !== undefined || optimisticMood !== null;
   const selectedTags = new Set(entry?.tags ?? []);
+  const selectedSymptoms = new Set(cycleDay?.symptoms ?? []);
+  const periodOn = cycleDay?.flow !== undefined && cycleDay.flow !== 'none';
 
   async function handleMoodSelect(mood: MoodLevel) {
-    await upsertMoodEntry({ date: today, mood, tags: entry?.tags, note: entry?.note });
+    setOptimisticMood(mood);
     if ('vibrate' in navigator) navigator.vibrate(15);
     setJustSaved(true);
     setTimeout(() => setJustSaved(false), 1800);
+    await upsertMoodEntry({ date: today, mood, tags: entry?.tags, note: entry?.note });
   }
 
   async function handleEnergySelect(energy: MoodLevel) {
@@ -48,6 +66,17 @@ export function TodayScreen() {
     await upsertMoodEntry({ date: today, mood: entry.mood, tags: entry.tags, note: value });
   }
 
+  async function togglePeriod() {
+    await upsertCycleDay(today, periodOn ? 'none' : PERIOD_ON_FLOW, cycleDay?.symptoms ?? [], cycleDay?.note);
+  }
+
+  async function toggleSymptom(id: string) {
+    const next = selectedSymptoms.has(id)
+      ? (cycleDay?.symptoms ?? []).filter((s) => s !== id)
+      : [...(cycleDay?.symptoms ?? []), id];
+    await upsertCycleDay(today, cycleDay?.flow ?? 'none', next, cycleDay?.note);
+  }
+
   const dateLabel = new Date().toLocaleDateString('es-AR', {
     weekday: 'long',
     day: 'numeric',
@@ -63,7 +92,7 @@ export function TodayScreen() {
         <h1 className="text-2xl font-semibold mt-1">¿Cómo estuvo tu día?</h1>
       </header>
 
-      <MoodScale value={entry?.mood} onChange={handleMoodSelect} />
+      <MoodScale value={displayedMood} onChange={handleMoodSelect} />
 
       <AnimatePresence>
         {justSaved && (
@@ -80,7 +109,7 @@ export function TodayScreen() {
       </AnimatePresence>
 
       <AnimatePresence>
-        {entry && (
+        {showDetails && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
@@ -91,7 +120,7 @@ export function TodayScreen() {
               <h2 className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
                 Energía (opcional)
               </h2>
-              <EnergyScale value={entry.energy} onChange={handleEnergySelect} />
+              <EnergyScale value={entry?.energy} onChange={handleEnergySelect} />
             </section>
 
             <section>
@@ -110,12 +139,31 @@ export function TodayScreen() {
               </div>
             </section>
 
+            {settings?.cycleTrackingEnabled && (
+              <section>
+                <h2 className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                  Período
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  <Chip label="🩸 Hoy tengo período" selected={periodOn} onClick={togglePeriod} />
+                  {symptoms?.map((s) => (
+                    <Chip
+                      key={s.id}
+                      label={s.label}
+                      selected={selectedSymptoms.has(s.id)}
+                      onClick={() => toggleSymptom(s.id)}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
             <section>
               <h2 className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
                 Nota (opcional)
               </h2>
               <textarea
-                defaultValue={entry.note}
+                defaultValue={entry?.note}
                 onBlur={(e) => saveNote(e.target.value)}
                 placeholder="¿Algo que quieras recordar de hoy?"
                 rows={3}
@@ -126,24 +174,6 @@ export function TodayScreen() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {settings?.cycleTrackingEnabled && (
-        <button
-          type="button"
-          onClick={() => setCycleSheetOpen(true)}
-          className="card card-tappable w-full mt-6 rounded-xl p-3 text-sm font-medium flex items-center justify-between"
-        >
-          <span>🩸 Registrar período{cycleDay && cycleDay.flow !== 'none' ? ' ✓' : ''}</span>
-          <span aria-hidden="true">›</span>
-        </button>
-      )}
-
-      <CycleLogSheet
-        open={cycleSheetOpen}
-        onClose={() => setCycleSheetOpen(false)}
-        date={today}
-        cycleDay={cycleDay}
-      />
     </Screen>
   );
 }

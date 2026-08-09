@@ -172,15 +172,20 @@ registrados, no se predice nada — se dice "necesito un ciclo más para estimar
 type Tag = { id: string; label: string; emoji: string; archived: boolean };
 ```
 
-Set por defecto editable: `sueño`, `trabajo`, `social`, `ejercicio`, `salud`,
-`familia`, `dinero`, `ocio`. El usuario puede crear los suyos.
+Set por defecto editable: `sueño`, `trabajo`, `social`, `ejercicio`, `familia`,
+`pareja`, `ocio`, `clima`. El usuario puede crear los suyos.
+
+> `dinero` y `salud` estaban en una versión anterior y se sacaron: no calzaban
+> con el resto de la lista para un tracker de humor. Se archivan (no se
+> borran) en bases que ya los tenían sembrados, para no perder el dato de
+> entries históricos que los usaban.
 
 ### Settings
 
 ```ts
 type Settings = {
   theme: 'system' | 'light' | 'dark';
-  cycleTrackingEnabled: boolean;  // v2 arranca apagado
+  cycleTrackingEnabled: boolean;  // activado por defecto (ver §9 cerradas)
   weekStartsOn: 0 | 1;            // domingo | lunes
   reminderTime?: string;          // "21:00", notificación local
 };
@@ -220,17 +225,37 @@ No es un dashboard. Es un botón grande.
 │  ─── al elegir, se expande ─┤
 │  Energía   ▁▃▅▇█            │
 │  Tags      #sueño #trabajo  │
+│  Período   🩸 #cólicos      │  ← si el tracking de ciclo está activo
 │  Nota      [ opcional ]     │
-│                             │
-│  🩸 Registrar período       │  ← v2, colapsado
 └─────────────────────────────┘
 ```
 
-- Tocar una cara **guarda inmediatamente**. Todo lo de abajo es opcional y aparece
-  después, no antes.
+- Tocar una cara **guarda inmediatamente**, con feedback óptico al toque — no
+  espera la vuelta de IndexedDB (ver nota de optimistic UI abajo). Todo lo de
+  abajo es opcional y aparece después, no antes.
 - Si el día ya está registrado: muestra lo elegido, tocar de nuevo lo cambia.
 - Si hay días anteriores sin registrar, un banner discreto: *"Te faltan 2 días"* →
   lleva a un flujo de completado rápido. Nunca un modal bloqueante.
+
+**Feedback optimista (corrige un bug real):** la cara seleccionada se marca al
+toque mediante un estado local, sin esperar a que la escritura en IndexedDB
+vuelva a través de la live query. Sin esto, el tiempo entre el tap y la
+confirmación visual —aunque sea de milisegundos— se sintió como "hay que
+tocar dos veces para que guarde". El estado optimista se descarta en cuanto
+la lectura real de la base confirma el mismo valor.
+
+**Período y síntomas van acá, no en una hoja aparte.** La primera versión los
+escondía detrás de un botón "🩸 Registrar período" que abría un bottom sheet
+con un selector de flujo de 5 niveles (nada/manchado/leve/medio/abundante).
+Eso agregaba fricción justo donde tiene que haber menos: para que "Ver ciclo"
+tenga datos, hace falta que alguien efectivamente marque el día, y un
+selector de 5 opciones invita a posponerlo. Ahora es un solo chip **"🩸 Hoy
+tengo período"** (on/off) al lado de los chips de síntomas, exactamente con
+la misma interacción que los Tags. El modelo de datos no cambió — `CycleDay.flow`
+sigue siendo el enum de 5 valores (§4) — la UI simplemente ya no lo expone:
+marcar el chip en "on" escribe `flow: 'medium'` como valor representativo:
+alcanza para que la detección de períodos funcione, y nadie tiene que elegir
+una intensidad para simplemente decir "hoy es un día de período".
 
 ### 5.2 Calendario — el indicador + el heatmap
 
@@ -293,11 +318,21 @@ La vista que pidió el usuario explícitamente.
 
 ### 5.4 Insights
 
-- **Tendencia de humor** en el tiempo (línea suavizada, 30/90/365 días)
-- **Distribución** de humor (barras horizontales por nivel)
-- **Humor por tag** (barras divergentes: desvío respecto del promedio general)
+**Todo lo que promedia o agrupa tiene un rango explícito, elegible con chips**
+(30 días / 90 días / 1 año / Todo, default 30). Ningún cálculo es "todo el
+historial" de forma implícita — la pregunta "¿esto en base a qué se pondera?"
+no debería necesitar leer el código para responderse; el rango se ve arriba
+de cada sección que depende de él, y el título de la sección lo repite
+("Distribución · 30 días").
+
+- **Tendencia de humor** en el tiempo (línea suavizada, sobre el rango elegido)
+- **Distribución** de humor (barras horizontales por nivel, sobre el rango elegido)
+- **Humor por tag** (desvío respecto del promedio *de ese mismo rango*, no del
+  historial completo — mezclar ventanas distintas en la misma pantalla es lo
+  que vuelve ilegible un insight)
 - **Humor por fase del ciclo** (v3) — el insight estrella
-- **Días registrados** este mes y en total (acumulativo, ver §6.4 — no hay rachas)
+- **Días registrados** este mes y en total — esto sí es explícitamente mensual
+  y acumulativo (§6.4, no hay rachas), no depende del selector de rango
 
 Cada gráfico incluye una lectura en texto plano debajo ("tu humor promedio en fase
 lútea es 0.6 más bajo que el resto del mes"), porque un número solo no es un insight.
@@ -307,7 +342,8 @@ lútea es 0.6 más bajo que el resto del mes"), porque un número solo no es un 
 - Estado actual: "Día 14 de tu ciclo · fase folicular (estimada)"
 - Próximo período estimado, con rango y nivel de confianza
 - Histórico de ciclos: duración de cada uno, con la mediana marcada
-- Registro de flujo y síntomas del día
+- El registro de período y síntomas vive en Hoy, no acá (§5.1) — esta pantalla
+  es de lectura, no de registro
 
 ### 5.6 Ajustes
 
@@ -576,23 +612,25 @@ Fases 0–7 = app de humor completa y usable. 8–9 = la capa de ciclo.
 | Escala de humor | **5 niveles** | Se prueba en uso; si molesta, se revisa. Migrar a slider después es barato (5 → 1-100 es multiplicar); al revés hay que bucketear |
 | Registros por día | **Uno por día** | Confirma el `DateKey` como PK (§4) |
 | Gamificación | **Sin rachas ni confeti** | Todo lo que cuenta días es acumulativo (§6.4) |
+| Energía | **Sí, desde el v1, opcional** | Implementada como magnitud ordinal de un solo hue (⚡ que se llena), nunca los 5 hues del humor — ver `EnergyScale` en §6.2 |
+| Tracking de ciclo | **Activado por defecto** | Con "Flujo" reducido a un chip on/off + síntomas inline (§5.1), registrar un día cuesta lo mismo que un tag — activarlo por defecto ya no impone fricción a quien no lo usa |
+| Registro de período | **Un chip binario, inline, sin sheet** | Reemplaza el selector de 5 niveles de flujo detrás de un botón. El dato interno (`CycleDay.flow`) no cambió; solo la UI dejó de exponer la granularidad |
+| Tags por defecto | **Se sacaron "Dinero" y "Salud"** | No calzaban con el resto de la lista para un tracker de humor; se agregaron "Pareja" y "Clima" en su lugar (§4) |
 
 ### Abiertas
 
-1. **¿"Energía" desde el v1 o solo humor?** Es la segunda dimensión más útil y casi
-   gratis de agregar, pero suma un tap. Yo la dejaría opcional en el v1.
-2. **¿Nombre y tono?** "Celimood" — ¿es el nombre definitivo? ¿El tono es en "vos"
+1. **¿Nombre y tono?** "Celimood" — ¿es el nombre definitivo? ¿El tono es en "vos"
    (rioplatense) o neutro? Afecta todo el microcopy.
-3. **¿Español solamente o i18n desde el arranque?** Meter i18n después cuesta;
+2. **¿Español solamente o i18n desde el arranque?** Meter i18n después cuesta;
    meterlo al principio cuesta poco. Recomiendo estructurar los strings aunque solo
    haya español.
-4. **¿Recordatorio diario?** Requiere permiso de notificaciones. En PWA funciona bien
+3. **¿Recordatorio diario?** Requiere permiso de notificaciones. En PWA funciona bien
    en Android, en iOS solo si está instalada. Con la decisión de no gamificar (§6.4),
    si se incluye tiene que ser una invitación sin insistencia: un aviso, sin repetir
    ni acumular pendientes. ¿Lo incluimos en el v1?
-5. **¿Bloqueo con PIN / biométrico?** Los datos de ciclo son sensibles y el
+4. **¿Bloqueo con PIN / biométrico?** Los datos de ciclo son sensibles y el
    dispositivo puede estar compartido. Es barato de agregar y aporta mucha confianza.
-6. **¿Historial previo?** ¿Hay datos en otra app que quieras importar, o arrancamos de
+5. **¿Historial previo?** ¿Hay datos en otra app que quieras importar, o arrancamos de
    cero? Si hay que importar, el formato condiciona el importer.
-7. **¿Quién lo usa?** ¿Es para vos, o pensás compartirla? Si es solo para vos, se puede
+6. **¿Quién lo usa?** ¿Es para vos, o pensás compartirla? Si es solo para vos, se puede
    simplificar bastante (menos onboarding, menos configuración).

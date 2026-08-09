@@ -29,11 +29,15 @@ export const DEFAULT_TAGS: Omit<Tag, 'archived'>[] = [
   { id: 'trabajo', label: 'Trabajo', emoji: '💼' },
   { id: 'social', label: 'Social', emoji: '👥' },
   { id: 'ejercicio', label: 'Ejercicio', emoji: '🏃' },
-  { id: 'salud', label: 'Salud', emoji: '🩺' },
   { id: 'familia', label: 'Familia', emoji: '🏠' },
-  { id: 'dinero', label: 'Dinero', emoji: '💰' },
+  { id: 'pareja', label: 'Pareja', emoji: '❤️' },
   { id: 'ocio', label: 'Ocio', emoji: '🎨' },
+  { id: 'clima', label: 'Clima', emoji: '🌦️' },
 ];
+
+/** Tags de versiones previas que no calzaban bien acá — se archivan, no se
+ * borran (si quedaron entries con ese tag, no se pierde el dato histórico). */
+const RETIRED_TAG_IDS = ['dinero', 'salud'];
 
 export const DEFAULT_SYMPTOMS: Omit<Symptom, 'archived'>[] = [
   { id: 'colicos', label: 'Cólicos' },
@@ -86,8 +90,25 @@ export async function ensureSeedData(): Promise<void> {
     await db.settings.put({
       key: 'singleton',
       theme: 'system',
-      cycleTrackingEnabled: false,
+      cycleTrackingEnabled: true,
       weekStartsOn: 1,
     });
   }
+
+  await retireOldTags();
+}
+
+/**
+ * Migración liviana: si una base ya tenía "Dinero"/"Salud" sembrados por una
+ * versión anterior, los archiva (no los borra — los entries que ya los usan
+ * conservan el dato). Corre siempre, no solo en el seed inicial.
+ */
+async function retireOldTags(): Promise<void> {
+  const toRetire = await db.tags
+    .where('id')
+    .anyOf(RETIRED_TAG_IDS)
+    .filter((t) => !t.archived)
+    .toArray();
+  if (toRetire.length === 0) return;
+  await db.tags.bulkPut(toRetire.map((t) => ({ ...t, archived: true })));
 }

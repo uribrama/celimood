@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MoodScale } from '../../components/MoodScale';
 import { DayDetailsEditor } from '../../components/DayDetailsEditor';
@@ -12,6 +12,14 @@ import { useLiveQuery } from '../../db/useLiveQuery';
 import { useTimedFlag } from '../../hooks/useTimedFlag';
 
 const TREND_RANGE_DAYS = 30;
+const INACTIVITY_TIMEOUT_MS = 20_000;
+
+/**
+ * 'entry'   — todavía no hay humor logueado hoy: solo las caras.
+ * 'editing' — el editor completo, expandido.
+ * 'summary' — la tendencia, con un link para volver a editar.
+ */
+type ViewMode = 'entry' | 'editing' | 'summary';
 
 export function TodayScreen() {
   const today = todayKey();
@@ -31,29 +39,42 @@ export function TodayScreen() {
   const displayedMood = optimisticMood ?? entry?.mood;
 
   // ¿Hoy ya estaba registrado cuando ENTRASTE a esta pantalla, o lo acabás de
-  // loguear en esta misma visita? La diferencia decide si se muestra el
-  // editor expandido (invita a completar tags/energía/nota mientras está
-  // fresco) o el resumen con la tendencia (ya volviste a mirar, no a cargar).
-  // Como la pantalla se desmonta al cambiar de tab, cambiar de tab y volver
-  // — o cerrar y reabrir la app — cuentan como "entrar de nuevo" gratis, sin
-  // lógica extra para cada caso.
-  const [hadEntryOnMount, setHadEntryOnMount] = useState<boolean | null>(null);
-  const [justLoggedThisVisit, setJustLoggedThisVisit] = useState(false);
+  // loguear en esta misma visita? Decide el punto de partida: 'summary' si ya
+  // estaba (cambiaste de tab y volviste, o cerraste y reabriste la app —
+  // ambos casos remontan este componente, así que salen gratis de la misma
+  // lectura), 'entry' si no.
+  const [viewMode, setViewMode] = useState<ViewMode>('entry');
   useEffect(() => {
     let cancelled = false;
     getMoodEntry(today).then((result) => {
-      if (!cancelled) setHadEntryOnMount(result !== undefined);
+      if (!cancelled) setViewMode(result !== undefined ? 'summary' : 'entry');
     });
     return () => {
       cancelled = true;
     };
-    // Solo al montar — es una lectura única para fijar el punto de partida,
-    // no debe repetirse cuando `entry` cambia por culpa de nuestros propios guardados.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const showExpandedEditor = hadEntryOnMount === false || justLoggedThisVisit;
-  const showSummary = entry !== undefined && !showExpandedEditor;
+  // A los 20s de no tocar nada estando en 'editing', pasa a 'summary' solo —
+  // invitaste a completar tags/energía/nota, pero si no hiciste nada en un
+  // rato, mejor mostrar la tendencia que dejar el editor ahí para siempre.
+  // Se pausa mientras hay foco adentro (p. ej. escribiendo la nota): un
+  // timer ciego podría tapar el editor a media frase.
+  const lastActivityRef = useRef(Date.now());
+  const [hasFocusWithin, setHasFocusWithin] = useState(false);
+  useEffect(() => {
+    if (viewMode !== 'editing' || hasFocusWithin) return;
+    const id = setInterval(() => {
+      if (Date.now() - lastActivityRef.current >= INACTIVITY_TIMEOUT_MS) {
+        setViewMode('summary');
+      }
+    }, 1000);
+    return () => clearInterval(id);
+  }, [viewMode, hasFocusWithin]);
+
+  function pingActivity() {
+    lastActivityRef.current = Date.now();
+  }
 
   const trendRangeStart = addDays(today, -TREND_RANGE_DAYS);
   const trendEntries = useMemo(
@@ -63,7 +84,8 @@ export function TodayScreen() {
 
   async function handleMoodSelect(mood: MoodLevel) {
     setOptimisticMood(mood);
-    setJustLoggedThisVisit(true);
+    pingActivity();
+    setViewMode('editing');
     if ('vibrate' in navigator) navigator.vibrate(15);
     triggerJustSaved();
     await upsertMoodEntry({ date: today, mood, tags: entry?.tags, note: entry?.note });
@@ -110,7 +132,7 @@ export function TodayScreen() {
       </div>
 
       <AnimatePresence mode="wait">
-        {showExpandedEditor && entry && (
+        {viewMode === 'editing' && entry && (
           <motion.div
             key="editor"
             initial={{ opacity: 0, height: 0 }}
@@ -118,11 +140,16 @@ export function TodayScreen() {
             exit={{ opacity: 0, height: 0 }}
             className="mt-6 overflow-hidden"
           >
-            <DayDetailsEditor date={today} entry={entry} />
+            <DayDetailsEditor
+              date={today}
+              entry={entry}
+              onActivity={pingActivity}
+              onFocusWithinChange={setHasFocusWithin}
+            />
           </motion.div>
         )}
 
-        {showSummary && (
+        {viewMode === 'summary' && (
           <motion.div
             key="summary"
             initial={{ opacity: 0 }}

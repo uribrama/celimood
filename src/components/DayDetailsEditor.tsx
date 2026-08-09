@@ -18,6 +18,13 @@ const PERIOD_ON_FLOW = 'medium';
 type DayDetailsEditorProps = {
   date: DateKey;
   entry: MoodEntry;
+  /** Se llama en cada guardado — Hoy lo usa para resetear el timer de
+   * inactividad que colapsa el editor a la tendencia (ver TodayScreen). */
+  onActivity?: () => void;
+  /** true mientras algo adentro (típicamente la nota) tiene el foco — Hoy
+   * pausa el timer de inactividad con esto, para no tapar el editor con la
+   * tendencia mientras estás escribiendo, aunque lleve más de 20s. */
+  onFocusWithinChange?: (hasFocus: boolean) => void;
 };
 
 /**
@@ -25,7 +32,7 @@ type DayDetailsEditorProps = {
  * y el editor de días pasados del calendario, para que ambos editen exactamente
  * lo mismo en vez de que el calendario solo deje tocar el emoji.
  */
-export function DayDetailsEditor({ date, entry }: DayDetailsEditorProps) {
+export function DayDetailsEditor({ date, entry, onActivity, onFocusWithinChange }: DayDetailsEditorProps) {
   const tags = useLiveQuery(() => db.tags.filter((t) => !t.archived).toArray(), []);
   const symptomCatalog = useLiveQuery(() => db.symptoms.filter((s) => !s.archived).toArray(), []);
   const settings = useLiveQuery(() => db.settings.get('singleton'), []);
@@ -47,12 +54,14 @@ export function DayDetailsEditor({ date, entry }: DayDetailsEditorProps) {
   }
 
   async function handleEnergySelect(energy: MoodLevel) {
+    onActivity?.();
     await upsertMoodEntry({ date, mood: entry.mood, energy, tags: entry.tags, note: entry.note });
     buzz();
     triggerEnergySaved();
   }
 
   async function toggleTag(tagId: string) {
+    onActivity?.();
     const next = selectedTags.has(tagId)
       ? entry.tags.filter((t) => t !== tagId)
       : [...entry.tags, tagId];
@@ -62,18 +71,21 @@ export function DayDetailsEditor({ date, entry }: DayDetailsEditorProps) {
   }
 
   async function saveNote(value: string) {
+    onActivity?.();
     await upsertMoodEntry({ date, mood: entry.mood, tags: entry.tags, note: value });
     buzz();
     triggerNoteSaved();
   }
 
   async function togglePeriod() {
+    onActivity?.();
     await upsertCycleDay(date, periodOn ? 'none' : PERIOD_ON_FLOW, cycleDay?.symptoms ?? [], cycleDay?.note);
     buzz();
     triggerPeriodSaved();
   }
 
   async function toggleSymptom(id: string) {
+    onActivity?.();
     const next = selectedSymptoms.has(id)
       ? (cycleDay?.symptoms ?? []).filter((s) => s !== id)
       : [...(cycleDay?.symptoms ?? []), id];
@@ -88,6 +100,8 @@ export function DayDetailsEditor({ date, entry }: DayDetailsEditorProps) {
       animate={{ opacity: 1, height: 'auto' }}
       exit={{ opacity: 0, height: 0 }}
       className="space-y-4 overflow-hidden"
+      onFocus={() => onFocusWithinChange?.(true)}
+      onBlur={() => onFocusWithinChange?.(false)}
     >
       <section>
         <h2 className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>

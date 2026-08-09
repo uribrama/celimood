@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId } from 'react';
 import { diffDays, type DateKey } from '../domain/dates';
 import { MOOD_EMOJI, MOOD_LABEL, type MoodEntry, type MoodLevel } from '../domain/mood';
 
@@ -39,7 +39,6 @@ type TrendChartProps = {
  * (mismo principio que "ausente ≠ dato" en SPEC.md §4/§5.2).
  */
 export function TrendChart({ entries, rangeStart, rangeEnd, height = 160 }: TrendChartProps) {
-  const [showTable, setShowTable] = useState(false);
   const gradientId = useId();
   const HEIGHT = height;
 
@@ -76,40 +75,7 @@ export function TrendChart({ entries, rangeStart, rangeEnd, height = 160 }: Tren
 
   return (
     <div>
-      <div className="flex justify-end mb-1.5">
-        <button
-          type="button"
-          onClick={() => setShowTable((v) => !v)}
-          className="text-xs font-medium underline"
-          style={{ color: 'var(--text-secondary)' }}
-        >
-          {showTable ? 'Ver gráfico' : 'Ver como tabla'}
-        </button>
-      </div>
-
-      {showTable ? (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr style={{ color: 'var(--text-secondary)' }}>
-                <th className="text-left font-medium py-1">Fecha</th>
-                <th className="text-right font-medium py-1">Humor</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[...sorted].reverse().map((e) => (
-                <tr key={e.date} style={{ borderTop: '1px solid var(--hairline)' }}>
-                  <td className="py-1.5 tabular-nums">{e.date}</td>
-                  <td className="py-1.5 text-right">
-                    {MOOD_EMOJI[e.mood]} {MOOD_LABEL[e.mood]}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <svg
+      <svg
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           className="w-full h-auto"
           role="img"
@@ -199,7 +165,6 @@ export function TrendChart({ entries, rangeStart, rangeEnd, height = 160 }: Tren
             {rangeEnd}
           </text>
         </svg>
-      )}
     </div>
   );
 }

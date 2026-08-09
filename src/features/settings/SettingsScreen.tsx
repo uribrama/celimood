@@ -113,18 +113,14 @@ export function SettingsScreen() {
               key={opt.value}
               type="button"
               onClick={() => setTheme(opt.value)}
-              className="flex-1 py-2 rounded-lg text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+              className={`flex-1 py-2.5 rounded-lg text-sm font-medium border transition-all duration-150 active:translate-y-0 active:scale-95 ${
+                settings?.theme === opt.value ? '' : 'hover:-translate-y-0.5 hover:bg-[var(--surface-2)]'
+              }`}
               style={
                 settings?.theme === opt.value
                   ? { backgroundColor: 'var(--text-primary)', color: 'var(--surface-1)', borderColor: 'var(--text-primary)' }
                   : { borderColor: 'var(--hairline)' }
               }
-              onMouseEnter={(e) => {
-                if (settings?.theme !== opt.value) e.currentTarget.style.backgroundColor = 'var(--surface-2)';
-              }}
-              onMouseLeave={(e) => {
-                if (settings?.theme !== opt.value) e.currentTarget.style.backgroundColor = '';
-              }}
             >
               {opt.label}
             </button>
@@ -132,19 +128,22 @@ export function SettingsScreen() {
         </div>
       </section>
 
-      <section className="mb-6 flex items-center justify-between">
+      <button
+        type="button"
+        onClick={toggleCycleTracking}
+        role="switch"
+        aria-checked={settings?.cycleTrackingEnabled ?? false}
+        className="mb-6 w-full flex items-center justify-between gap-3 text-left rounded-lg py-1 -my-1 active:scale-[0.99] transition-transform"
+      >
         <div>
           <h2 className="text-sm font-medium">Tracking de ciclo</h2>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
             Habilita el registro de período, síntomas y predicciones.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={toggleCycleTracking}
-          role="switch"
-          aria-checked={settings?.cycleTrackingEnabled ?? false}
-          className="w-12 h-7 rounded-full relative shrink-0 transition-colors hover:brightness-95 active:scale-95"
+        <span
+          aria-hidden="true"
+          className="w-12 h-7 rounded-full relative shrink-0 transition-colors"
           style={{ backgroundColor: settings?.cycleTrackingEnabled ? 'var(--mood-5)' : 'var(--hairline)' }}
         >
           <span
@@ -154,8 +153,8 @@ export function SettingsScreen() {
               transform: settings?.cycleTrackingEnabled ? 'translateX(22px)' : 'translateX(2px)',
             }}
           />
-        </button>
-      </section>
+        </span>
+      </button>
 
       <section className="mb-6 space-y-2">
         <h2 className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
@@ -206,10 +205,8 @@ export function SettingsScreen() {
         <button
           type="button"
           onClick={() => setConfirmErase(true)}
-          className="w-full py-2.5 rounded-lg text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+          className="w-full py-2.5 rounded-lg text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 hover:bg-[color-mix(in_srgb,var(--status-critical)_10%,transparent)] active:translate-y-0 active:scale-95"
           style={{ borderColor: 'var(--status-critical)', color: 'var(--status-critical)' }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--status-critical) 10%, transparent)')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
         >
           Borrar todos los datos
         </button>
@@ -237,10 +234,8 @@ export function SettingsScreen() {
             <button
               type="button"
               onClick={() => confirmApply('replace')}
-              className="w-full py-2.5 rounded-lg text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+              className="w-full py-2.5 rounded-lg text-sm font-medium border transition-all duration-150 hover:-translate-y-0.5 hover:bg-[color-mix(in_srgb,var(--status-critical)_10%,transparent)] active:translate-y-0 active:scale-95"
               style={{ borderColor: 'var(--status-critical)', color: 'var(--status-critical)' }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'color-mix(in srgb, var(--status-critical) 10%, transparent)')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
             >
               Reemplazar todo lo local
             </button>
@@ -257,7 +252,7 @@ export function SettingsScreen() {
           <input
             value={eraseText}
             onChange={(e) => setEraseText(e.target.value)}
-            className="w-full rounded-lg p-2.5 text-sm"
+            className="w-full rounded-lg p-2.5 text-base"
             style={{ border: '1px solid var(--hairline)', backgroundColor: 'var(--surface-2)' }}
           />
           <button

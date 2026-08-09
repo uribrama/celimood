@@ -6,6 +6,7 @@ import { InsightsScreen } from '../features/insights/InsightsScreen';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 import { BrowseScreen } from '../features/browse/BrowseScreen';
 import { CycleScreen } from '../features/cycle/CycleScreen';
+import { OnboardingScreen } from '../features/onboarding/OnboardingScreen';
 import { db, ensureSeedData } from '../db/schema';
 import { useLiveQuery } from '../db/useLiveQuery';
 
@@ -27,6 +28,12 @@ export function App() {
   }, [settings?.theme]);
 
   if (!ready) return null;
+
+  if (settings && !settings.hasSeenOnboarding) {
+    return (
+      <OnboardingScreen onDone={() => db.settings.update('singleton', { hasSeenOnboarding: true })} />
+    );
+  }
 
   if (overlay === 'browse') {
     return <BrowseScreen onBack={() => setOverlay(null)} />;

@@ -22,6 +22,7 @@ export type Settings = {
   weekStartsOn: 0 | 1;
   reminderTime?: string;
   lastExportAt?: number;
+  hasSeenOnboarding: boolean;
 };
 
 export const DEFAULT_TAGS: Omit<Tag, 'archived'>[] = [
@@ -99,7 +100,13 @@ export async function ensureSeedData(): Promise<void> {
       theme: 'system',
       cycleTrackingEnabled: true,
       weekStartsOn: 1,
+      hasSeenOnboarding: false,
     });
+  } else if (settings.hasSeenOnboarding === undefined) {
+    // Migración: una base que ya tenía datos antes de que existiera este
+    // campo ya pasó la introducción de sobra — no hay que mostrársela
+    // retroactivamente a quien ya viene usando la app.
+    await db.settings.update('singleton', { hasSeenOnboarding: true });
   }
 
   await retireOldTags();

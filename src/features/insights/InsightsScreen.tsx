@@ -171,20 +171,24 @@ export function InsightsScreen({ onOpenBrowse, onOpenCycle, cycleTrackingEnabled
               return (
                 <div key={tagId} className="flex items-center justify-between text-sm">
                   <span>{tagLabel(tagId)}</span>
-                  <span
-                    className="tabular-nums font-medium"
-                    style={{ color: delta >= 0 ? 'var(--status-good)' : 'var(--status-critical)' }}
-                  >
-                    {delta >= 0 ? '+' : ''}
-                    {delta.toFixed(1)}
+                  <span className="flex items-baseline gap-1.5">
+                    <span className="tabular-nums font-semibold">{avg.toFixed(1)}</span>
+                    <span
+                      className="tabular-nums text-xs font-medium"
+                      style={{ color: delta >= 0 ? 'var(--status-good)' : 'var(--status-critical)' }}
+                    >
+                      ({delta >= 0 ? '+' : ''}
+                      {delta.toFixed(1)})
+                    </span>
                   </span>
                 </div>
               );
             })}
           </div>
           <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
-            Cuánto mejor o peor es tu humor en los días con cada tag, comparado con tu
-            promedio general de estos {rangeLabel.toLowerCase()} ({overallAverage?.toFixed(1) ?? '—'}).
+            Primero el promedio de humor en los días con ese tag; entre paréntesis, cuánto
+            se aleja de tu promedio general de estos {rangeLabel.toLowerCase()} (
+            {overallAverage?.toFixed(1) ?? '—'}).
           </p>
         </section>
       )}

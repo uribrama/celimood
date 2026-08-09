@@ -130,20 +130,18 @@ export function TodayScreen() {
             exit={{ opacity: 0 }}
             className="mt-6"
           >
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
-                Tendencia · últimos {TREND_RANGE_DAYS} días
-              </h2>
-              <button
-                type="button"
-                onClick={() => setEditSheetOpen(true)}
-                className="text-xs font-medium underline"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                ✎ Editar detalles de hoy
-              </button>
-            </div>
+            <h2 className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+              Tendencia · últimos {TREND_RANGE_DAYS} días
+            </h2>
             <TrendChart entries={trendEntries} rangeStart={trendRangeStart} rangeEnd={today} height={220} />
+            <button
+              type="button"
+              onClick={() => setEditSheetOpen(true)}
+              className="card card-tappable w-full text-left rounded-xl p-4 mt-4 flex items-center justify-between"
+            >
+              <span className="text-sm font-medium">✎ Editar detalles de hoy</span>
+              <span aria-hidden="true">›</span>
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

@@ -59,9 +59,12 @@ export function MoodFace({ level, selected, size = 'md', onClick, showLabel }: M
   if (!showLabel) return face;
 
   return (
-    <div className="flex-1 min-w-0 flex flex-col items-center gap-1.5">
+    // gap-3, no gap-1.5: seleccionada, la cara crece ~9px más allá de su caja
+    // entre el scale(1.12) y el anillo de selección (3px + 5px de sombra) —
+    // con menos espacio ese anillo tapaba el borde superior del nombre.
+    <div className="flex-1 min-w-0 flex flex-col items-center gap-3">
       {face}
-      <span className="text-[11px] leading-tight text-center" style={{ color: 'var(--text-secondary)' }}>
+      <span className="text-xs font-medium leading-tight text-center" style={{ color: 'var(--text-secondary)' }}>
         {label}
       </span>
     </div>

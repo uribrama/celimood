@@ -165,6 +165,17 @@ export function medianPlausibleCycleLength(cycles: Cycle[]): number | null {
 
 export type CyclePhase = 'menstrual' | 'follicular' | 'ovulatory' | 'luteal' | 'unknown';
 
+export const PHASE_LABEL: Record<CyclePhase, string> = {
+  menstrual: 'Menstrual',
+  follicular: 'Folicular',
+  ovulatory: 'Ovulatoria',
+  luteal: 'Lútea',
+  unknown: 'Sin datos suficientes',
+};
+
+/** Orden de exhibición — nunca 'unknown', que se excluye de los promedios. */
+export const CYCLE_PHASES_IN_ORDER: CyclePhase[] = ['menstrual', 'follicular', 'ovulatory', 'luteal'];
+
 /**
  * Fase estimada del ciclo para un día. Requiere el período actual/último y la
  * duración mediana — son ESTIMACIONES (SPEC.md §4), la UI las etiqueta como tales.
@@ -187,6 +198,36 @@ export function estimatePhase(
   if (cycleDay < ovulationDay - 1) return 'follicular';
   if (cycleDay <= ovulationDay + 1) return 'ovulatory';
   return 'luteal';
+}
+
+/**
+ * Fase para una fecha HISTÓRICA arbitraria, usando la duración REAL del
+ * ciclo al que perteneció esa fecha (no la mediana global) cuando se
+ * conoce — más preciso que llamar a `estimatePhase` a mano para el pasado,
+ * porque ahí ya sabemos cuánto duró ese ciclo en particular. Solo cae a la
+ * mediana para el ciclo actual, todavía abierto (sin período siguiente que
+ * lo cierre) — el mismo caso que ya resuelve `estimatePhase` para "hoy".
+ */
+export function phaseForDate(
+  date: DateKey,
+  periods: Period[],
+  fallbackMedianLength: number | null,
+): CyclePhase {
+  const sorted = [...periods].sort((a, b) => compareDateKeys(a.start, b.start));
+  let current: Period | undefined;
+  let next: Period | undefined;
+  for (const period of sorted) {
+    if (compareDateKeys(period.start, date) <= 0) {
+      current = period;
+    } else {
+      next = period;
+      break;
+    }
+  }
+  if (!current) return 'unknown';
+
+  const cycleLength = next ? diffDays(current.start, next.start) : fallbackMedianLength;
+  return estimatePhase(date, current.start, cycleLength);
 }
 
 /** Cuántas veces aparece cada síntoma en el rango de días dado. */

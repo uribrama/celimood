@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { DateKey } from '../dates';
+import type { Period } from '../cycle';
 import {
   averageEnergy,
+  averageMoodByPhase,
   averageMoodByTag,
+  averageMoodByWeekday,
   energyDistribution,
   entriesByMood,
   moodDistribution,
@@ -105,5 +108,43 @@ describe('averageEnergy', () => {
 
   it('sin ningún día con energía, devuelve null', () => {
     expect(averageEnergy([entry('2026-08-01', 5)])).toBeNull();
+  });
+});
+
+describe('averageMoodByPhase', () => {
+  it('agrupa por fase usando la duración real del ciclo, excluye los días unknown', () => {
+    // Ciclo cerrado junio→julio, 28 días reales (junio tiene 30 días: 5→30=25, +3=28).
+    const periods: Period[] = [
+      { start: '2026-06-05' as DateKey, end: '2026-06-08' as DateKey },
+      { start: '2026-07-03' as DateKey, end: '2026-07-06' as DateKey },
+    ];
+    const entries = [
+      entry('2026-06-05', 5), // día 0 → menstrual
+      entry('2026-06-10', 3), // día 5 → folicular
+      entry('2026-06-18', 2), // día 13 → ovulatoria
+      entry('2026-06-25', 4), // día 20 → lútea
+      entry('2026-05-01', 1), // antes de cualquier período → unknown, se excluye
+    ];
+    const byPhase = averageMoodByPhase(entries, periods, null);
+    expect(byPhase.get('menstrual')).toBe(5);
+    expect(byPhase.get('follicular')).toBe(3);
+    expect(byPhase.get('ovulatory')).toBe(2);
+    expect(byPhase.get('luteal')).toBe(4);
+    expect(byPhase.has('unknown')).toBe(false);
+  });
+
+  it('sin períodos, el mapa queda vacío (todo es unknown)', () => {
+    expect(averageMoodByPhase([entry('2026-06-05', 5)], [], null).size).toBe(0);
+  });
+});
+
+describe('averageMoodByWeekday', () => {
+  it('promedia por día de semana e ignora los días sin registros', () => {
+    // 2026-08-03 y 2026-08-10 son lunes; 2026-08-04 es martes.
+    const entries = [entry('2026-08-03', 4), entry('2026-08-10', 2), entry('2026-08-04', 5)];
+    const byWeekday = averageMoodByWeekday(entries, 1);
+    expect(byWeekday[0]).toBe(3); // lunes: (4+2)/2
+    expect(byWeekday[1]).toBe(5); // martes
+    expect(byWeekday[2]).toBeNull(); // miércoles: sin datos
   });
 });

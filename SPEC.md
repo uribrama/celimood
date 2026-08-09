@@ -72,14 +72,18 @@ tiene que decir donde aparecen, y la app nunca debe usarse como método anticonc
 - Overlay del ciclo sobre el calendario de humor
 
 ### v3 — Insights (el cruce)
-- Humor promedio por **fase del ciclo** (menstrual / folicular / ovulatoria / lútea)
-- Humor promedio por **tag** ("dormí mal" → -0.8 de humor promedio)
-- Humor por día de la semana
-- Resumen mensual compartible (imagen exportada, sin datos crudos)
+- ✅ Humor promedio por **fase del ciclo** (menstrual / folicular / ovulatoria / lútea)
+- ✅ Humor promedio por **tag** ("dormí mal" → -0.8 de humor promedio)
+- ✅ Humor por día de la semana
+- Resumen mensual compartible (imagen exportada, sin datos crudos) — pendiente
 
 ### Fuera de alcance (por ahora)
-Cuentas y sync, notificaciones push server-side, integración con Apple Health /
+Cuentas y sync, integración con Apple Health /
 Google Fit, multi-usuario, IA que interprete las notas.
+
+> El recordatorio diario por push **sí** entró en alcance — es la primera pieza de
+> infraestructura fuera del dispositivo del proyecto. Plan completo en
+> `NOTIFICATIONS.md`.
 
 ---
 
@@ -593,11 +597,11 @@ donde van a estar los bugs, y ahí es donde se pueden testear sin montar compone
 | **2** | Registrar | Pantalla Hoy, escala de humor animada, tags, nota, completar días pasados |
 | **3** | Ver | **Indicador del mes** (cara + promedio + delta + cobertura), calendario heatmap, detalle del día en bottom sheet |
 | **4** | Explorar | Días por humor con chips de filtro, lista, estados vacíos |
-| **5** | Entender | Insights v1: tendencia, distribución, días registrados, humor por tag |
+| **5** | Entender ✅ | Insights: tendencia (línea, con vista de tabla accesible), distribución, humor por tag, energía, síntomas, día de la semana |
 | **6** | PWA | Manifest, service worker, offline, prompt de instalación, recordatorio local, **`storage.persist()` + el caso de desalojo en iOS** (§7) |
 | **7** | Backup | Export/import JSON con **semántica de fusión explícita** (§5.6), aviso de backup vencido, borrado total |
 | **8** | Ciclo | Registro de flujo y síntomas, **detección de períodos con ausente ≠ `none`** y filtro de plausibilidad (§4), predicción, overlay en calendario |
-| **9** | Cruce | Fases del ciclo, humor por fase, resumen mensual compartible |
+| **9** | Cruce | ✅ Humor por fase del ciclo (con duración real por ciclo, no solo la mediana global — `phaseForDate`). Pendiente: resumen mensual compartible |
 
 Fases 0–7 = app de humor completa y usable. 8–9 = la capa de ciclo.
 
@@ -616,6 +620,7 @@ Fases 0–7 = app de humor completa y usable. 8–9 = la capa de ciclo.
 | Tracking de ciclo | **Activado por defecto** | Con "Flujo" reducido a un chip on/off + síntomas inline (§5.1), registrar un día cuesta lo mismo que un tag — activarlo por defecto ya no impone fricción a quien no lo usa |
 | Registro de período | **Un chip binario, inline, sin sheet** | Reemplaza el selector de 5 niveles de flujo detrás de un botón. El dato interno (`CycleDay.flow`) no cambió; solo la UI dejó de exponer la granularidad |
 | Tags por defecto | **Se sacaron "Dinero" y "Salud"** | No calzaban con el resto de la lista para un tracker de humor; se agregaron "Pareja" y "Clima" en su lugar (§4) |
+| Recordatorio diario | **Sí, uno solo, ~11:00 Argentina** | Sin condicional a la noche — rompía la idea de invitar sin insistir (§6.4). Requiere la primera pieza de infra fuera del dispositivo (Vercel + Web Push): plan completo en `NOTIFICATIONS.md` |
 
 ### Abiertas
 
@@ -624,13 +629,9 @@ Fases 0–7 = app de humor completa y usable. 8–9 = la capa de ciclo.
 2. **¿Español solamente o i18n desde el arranque?** Meter i18n después cuesta;
    meterlo al principio cuesta poco. Recomiendo estructurar los strings aunque solo
    haya español.
-3. **¿Recordatorio diario?** Requiere permiso de notificaciones. En PWA funciona bien
-   en Android, en iOS solo si está instalada. Con la decisión de no gamificar (§6.4),
-   si se incluye tiene que ser una invitación sin insistencia: un aviso, sin repetir
-   ni acumular pendientes. ¿Lo incluimos en el v1?
-4. **¿Bloqueo con PIN / biométrico?** Los datos de ciclo son sensibles y el
+3. **¿Bloqueo con PIN / biométrico?** Los datos de ciclo son sensibles y el
    dispositivo puede estar compartido. Es barato de agregar y aporta mucha confianza.
-5. **¿Historial previo?** ¿Hay datos en otra app que quieras importar, o arrancamos de
+4. **¿Historial previo?** ¿Hay datos en otra app que quieras importar, o arrancamos de
    cero? Si hay que importar, el formato condiciona el importer.
-6. **¿Quién lo usa?** ¿Es para vos, o pensás compartirla? Si es solo para vos, se puede
+5. **¿Quién lo usa?** ¿Es para vos, o pensás compartirla? Si es solo para vos, se puede
    simplificar bastante (menos onboarding, menos configuración).

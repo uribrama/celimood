@@ -5,10 +5,12 @@ import {
   detectPeriods,
   estimatePhase,
   medianPlausibleCycleLength,
+  phaseForDate,
   predictNextPeriod,
   symptomFrequency,
   type CycleDay,
   type Flow,
+  type Period,
 } from '../cycle';
 
 function day(date: string, flow: Flow, symptoms: string[] = []): CycleDay {
@@ -201,5 +203,36 @@ describe('symptomFrequency', () => {
 
   it('sin días, devuelve un mapa vacío', () => {
     expect(symptomFrequency([]).size).toBe(0);
+  });
+});
+
+describe('phaseForDate — fecha histórica, usa la duración REAL del ciclo', () => {
+  const periods: Period[] = [
+    { start: '2026-06-05' as DateKey, end: '2026-06-08' as DateKey },
+    { start: '2026-07-03' as DateKey, end: '2026-07-06' as DateKey }, // ciclo de junio: 28 días
+    { start: '2026-08-16' as DateKey, end: '2026-08-19' as DateKey }, // ciclo de julio: 44 días (atípico, pero real)
+  ];
+
+  it('usa la duración real del ciclo, no la mediana global, para una fecha ya cerrada', () => {
+    // 2026-07-20 cae en el ciclo julio→agosto, cuya duración real es 44 días,
+    // muy distinta de una mediana global que podría rondar 28-30.
+    const phase = phaseForDate('2026-07-20' as DateKey, periods, 28);
+    // día de ciclo = diffDays(07-03, 07-20) = 17. Con longitud real 44,
+    // ovulación ≈ día 30 → cycleDay 17 cae en folicular.
+    expect(phase).toBe('follicular');
+  });
+
+  it('para el ciclo actual (todavía abierto, sin período siguiente) cae a la mediana', () => {
+    const phase = phaseForDate('2026-08-20' as DateKey, periods, 28);
+    // día de ciclo = diffDays(08-16, 08-20) = 4 → dentro del período → menstrual
+    expect(phase).toBe('menstrual');
+  });
+
+  it('una fecha anterior a cualquier período conocido es unknown', () => {
+    expect(phaseForDate('2026-05-01' as DateKey, periods, 28)).toBe('unknown');
+  });
+
+  it('sin períodos en absoluto, es unknown', () => {
+    expect(phaseForDate('2026-08-20' as DateKey, [], 28)).toBe('unknown');
   });
 });

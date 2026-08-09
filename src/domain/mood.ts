@@ -1,5 +1,6 @@
 import type { DateKey } from './dates';
-import { daysInMonth, isSameMonth, previousMonthKey } from './dates';
+import { daysInMonth, isSameMonth, previousMonthKey, weekdayIndex } from './dates';
+import { phaseForDate, type CyclePhase, type Period } from './cycle';
 
 export type MoodLevel = 1 | 2 | 3 | 4 | 5;
 
@@ -112,4 +113,44 @@ export function averageEnergy(entries: MoodEntry[]): number | null {
   const withEnergy = entries.filter((e): e is MoodEntry & { energy: MoodLevel } => e.energy !== undefined);
   if (withEnergy.length === 0) return null;
   return withEnergy.reduce((sum, e) => sum + e.energy, 0) / withEnergy.length;
+}
+
+/**
+ * Promedio de humor por fase de ciclo — "el insight estrella" (SPEC.md §3,
+ * fase 9): es el cruce que justifica que humor y ciclo vivan en la misma
+ * app. Los días 'unknown' (sin período conocido que los cubra) se excluyen
+ * en vez de asumirles una fase — ver phaseForDate.
+ */
+export function averageMoodByPhase(
+  entries: MoodEntry[],
+  periods: Period[],
+  fallbackMedianCycleLength: number | null,
+): Map<CyclePhase, number> {
+  const sums = new Map<CyclePhase, number>();
+  const counts = new Map<CyclePhase, number>();
+  for (const e of entries) {
+    const phase = phaseForDate(e.date, periods, fallbackMedianCycleLength);
+    if (phase === 'unknown') continue;
+    sums.set(phase, (sums.get(phase) ?? 0) + e.mood);
+    counts.set(phase, (counts.get(phase) ?? 0) + 1);
+  }
+  const out = new Map<CyclePhase, number>();
+  for (const [phase, sum] of sums) out.set(phase, sum / (counts.get(phase) ?? 1));
+  return out;
+}
+
+/** Promedio de humor por día de la semana. Índice 0-6 según `weekdayIndex`
+ * (0 = lunes si weekStartsOn=1). `null` en los días sin ningún registro. */
+export function averageMoodByWeekday(
+  entries: MoodEntry[],
+  weekStartsOn: 0 | 1 = 1,
+): (number | null)[] {
+  const sums = [0, 0, 0, 0, 0, 0, 0];
+  const counts = [0, 0, 0, 0, 0, 0, 0];
+  for (const e of entries) {
+    const idx = weekdayIndex(e.date, weekStartsOn);
+    sums[idx] += e.mood;
+    counts[idx]++;
+  }
+  return sums.map((sum, i) => (counts[i] > 0 ? sum / counts[i] : null));
 }

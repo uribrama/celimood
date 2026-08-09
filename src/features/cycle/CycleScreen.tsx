@@ -5,19 +5,12 @@ import {
   detectPeriods,
   estimatePhase,
   medianPlausibleCycleLength,
+  PHASE_LABEL,
   predictNextPeriod,
 } from '../../domain/cycle';
 import { diffDays, todayKey } from '../../domain/dates';
 import { useLiveQuery } from '../../db/useLiveQuery';
 import { getAllCycleDays } from '../../db/cycleRepo';
-
-const PHASE_LABEL: Record<string, string> = {
-  menstrual: 'Menstrual',
-  follicular: 'Folicular',
-  ovulatory: 'Ovulatoria',
-  luteal: 'Lútea',
-  unknown: 'Sin datos suficientes',
-};
 
 export function CycleScreen({ onBack }: { onBack: () => void }) {
   const cycleDays = useLiveQuery(getAllCycleDays, []) ?? [];

@@ -177,12 +177,17 @@ type Tag = { id: string; label: string; emoji: string; archived: boolean };
 ```
 
 Set por defecto editable: `sueño`, `trabajo`, `social`, `ejercicio`, `familia`,
-`pareja`, `ocio`, `clima`. El usuario puede crear los suyos.
+`pareja`, `ocio`, `clima`, `enfermo`, `dolor`, `dormí mal`, `estrés`. El
+usuario puede crear los suyos.
 
 > `dinero` y `salud` estaban en una versión anterior y se sacaron: no calzaban
 > con el resto de la lista para un tracker de humor. Se archivan (no se
 > borran) en bases que ya los tenían sembrados, para no perder el dato de
 > entries históricos que los usaban.
+>
+> `enfermo`, `dolor`, `dormí mal` y `estrés` se agregaron para cubrir
+> bienestar general de quien no trackea el ciclo — a diferencia de `salud`
+> (vago), son factores específicos, en la misma línea que el resto del set.
 
 ### Settings
 

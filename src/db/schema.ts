@@ -34,6 +34,13 @@ export const DEFAULT_TAGS: Omit<Tag, 'archived'>[] = [
   { id: 'pareja', label: 'Pareja', emoji: '❤️' },
   { id: 'ocio', label: 'Ocio', emoji: '🎨' },
   { id: 'clima', label: 'Clima', emoji: '🌦️' },
+  // Bienestar general — a diferencia de los síntomas de CycleDay (línea 43),
+  // estos no dependen de cycleTrackingEnabled: son la única forma de anotar
+  // "hoy estuve enferma" o "dolor" para quien no trackea el ciclo.
+  { id: 'enfermo', label: 'Enfermo/a', emoji: '🤒' },
+  { id: 'dolor', label: 'Dolor', emoji: '🤕' },
+  { id: 'mal-dormi', label: 'Dormí mal', emoji: '🥱' },
+  { id: 'estres', label: 'Estrés', emoji: '😣' },
 ];
 
 /** Tags de versiones previas que no calzaban bien acá — se archivan, no se
@@ -110,7 +117,20 @@ export async function ensureSeedData(): Promise<void> {
   }
 
   await retireOldTags();
+  await addMissingDefaultTags();
   await addMissingDefaultSymptoms();
+}
+
+/**
+ * Migración liviana análoga a `addMissingDefaultSymptoms`: si DEFAULT_TAGS
+ * creció en una versión nueva (p. ej. los de bienestar general), agrega los
+ * que falten en una base que ya sembró la lista vieja.
+ */
+async function addMissingDefaultTags(): Promise<void> {
+  const existingIds = new Set((await db.tags.toArray()).map((t) => t.id));
+  const missing = DEFAULT_TAGS.filter((t) => !existingIds.has(t.id));
+  if (missing.length === 0) return;
+  await db.tags.bulkPut(missing.map((t) => ({ ...t, archived: false })));
 }
 
 /**
